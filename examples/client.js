@@ -7,7 +7,9 @@ const { HyperCoreLogReader } = require('../')
 
 const key = '0db350f414a93274e5613930b79c7226f21270cfc1435b96350422a0abf63dc2'
 
-const client = new HyperCoreLogReader(() => ram(), key, null, null, { snapshot: false, tail: true })
+const client = new HyperCoreLogReader(
+  () => ram(), key, null, null, { snapshot: false, tail: true }
+)
 
 const main = async () => {
   client.on('data', (data) => console.log(data.toString().trim()))

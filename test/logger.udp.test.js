@@ -15,7 +15,9 @@ module.exports = () => {
       const databuff = []
       const udpclient = dgram.createSocket('udp4')
       const push = () => new Promise((resolve, reject) =>
-        udpclient.send('test\n', 7070, 'localhost', (err) => err ? reject(err) : resolve()))
+        udpclient.send('test\n', 7070, 'localhost',
+          (err) => err ? reject(err) : resolve()
+        ))
 
       const server = new HyperCoreUdpLogger(7070, () => ram())
 
@@ -23,7 +25,9 @@ module.exports = () => {
       await push()
       await push()
 
-      const client = new HyperCoreLogReader(() => ram(), server.feedKey, null, null, { snapshot: false, tail: true })
+      const client = new HyperCoreLogReader(
+        () => ram(), server.feedKey, null, null, { snapshot: false, tail: true }
+      )
       client.on('data', (data) => { databuff.push(data.toString()) })
 
       await sleep(500)

@@ -10,34 +10,81 @@ const yargs = require('yargs')
   .command(
     'read',
     'creates a reader for a hypercore log',
-    (y) => y.option('key', { type: 'string', alias: 'k', demandOption: true, description: 'feed public key, use either hex string or path to file' })
-      .option('datadir', { type: 'string', alias: 'd', description: 'feed data directory, if ommited RAM memory will be used' })
-      .option('tail', { type: 'boolean', description: 'tail the log file' })
-      .option('start', { type: 'number', description: 'feed read start, ignored in case if tail is specified' })
-      .option('end', { type: 'number', description: 'feed read end, ignored in case if tail is specified' })
+    (y) => y.option('key', {
+      type: 'string',
+      alias: 'k',
+      demandOption: true,
+      description: 'feed public key, use either hex string or path to file'
+    })
+      .option('datadir', {
+        type: 'string',
+        alias: 'd',
+        description: 'feed data directory, if ommited RAM memory will be used'
+      })
+      .option('tail', {
+        type: 'boolean',
+        description: 'tail the log file'
+      })
+      .option('start', {
+        type: 'number',
+        description: 'feed read start, ignored in case if tail is specified'
+      })
+      .option('end', {
+        type: 'number',
+        description: 'feed read end, ignored in case if tail is specified'
+      })
   )
   .command(
     'write',
     'creates a hypercore log writer',
-    (y) => y.option('key', { type: 'string', alias: 'k', description: 'feed public key, use either hex string or path to file, if not specified alongside with \'secret-key\' it will generate a new one' })
-      .option('secret-key', { type: 'string', alias: 's', description: 'feed private key, use either hex string or path to file, if not specified alongside with \'key\' it will generate a new one' })
-      .option('datadir', { type: 'string', alias: 'd', description: 'feed data directory, if ommited RAM memory will be used' })
-      .option('file', { type: 'string', alias: 'f', description: 'file that will be tailed, use either file or port option' })
-      .option('port', { type: 'number', alias: 'p', description: 'UDP server port, use either file or port option' })
+    (y) => y.option('key', {
+      type: 'string',
+      alias: 'k',
+      description: 'feed public key, use either hex string or path to file, ' +
+        'if not specified alongside with \'secret-key\'' +
+        'it will generate a new one'
+    })
+      .option('secret-key', {
+        type: 'string',
+        alias: 's',
+        desc: 'feed private key, use either hex string or path to file, ' +
+          'if not specified alongside with \'key\' it will generate a new one'
+      })
+      .option('datadir', {
+        type: 'string',
+        alias: 'd',
+        description: 'feed data directory, if ommited RAM memory will be used'
+      })
+      .option('file', {
+        type: 'string',
+        alias: 'f',
+        description: 'file that will be tailed, use either file or port option'
+      })
+      .option('port', {
+        type: 'number',
+        alias: 'p',
+        description: 'UDP server port, use either file or port option'
+      })
   )
   .demandCommand()
   .recommendCommands()
   .help()
 
-const { HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger } = require('../')
+const {
+  HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
+} = require('../')
 const { isHexStr, fullpath } = require('../src/helper')
 
 const cmds = ['read', 'write']
 
 const parseKey = (key, keylen, warning) => {
   try {
-    if (key === null || key === undefined || typeof key !== 'string') return null
+    if (key === null || key === undefined || typeof key !== 'string') {
+      return null
+    }
+
     if (isHexStr(key) && key.length === keylen) return Buffer.from(key, 'hex')
+
     return fs.readFileSync(fullpath(key))
   } catch (err) {
     console.warn('WARNING_INVALID_KEY: ' + warning, err)
@@ -46,7 +93,10 @@ const parseKey = (key, keylen, warning) => {
 }
 
 const parseStorage = (dir) => {
-  if (dir === null || dir === undefined || typeof dir !== 'string') return () => ram()
+  if (dir === null || dir === undefined || typeof dir !== 'string') {
+    return () => ram()
+  }
+
   return fullpath(dir)
 }
 
@@ -69,7 +119,9 @@ const main = async () => {
       if (typeof argv.end === 'number') streamOpts.end = argv.end
       if (argv.tail === true) streamOpts = { snapshot: false, tail: true }
 
-      const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
+      const client = new HyperCoreLogReader(
+        storage, key, null, null, streamOpts
+      )
       client.on('data', (data) => console.log(data.toString().trim()))
 
       await client.start()

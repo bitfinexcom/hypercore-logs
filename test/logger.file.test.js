@@ -14,7 +14,9 @@ module.exports = () => {
     it('file logger should push data from file to the reader', async () => {
       const databuff = []
       const filename = `${__dirname}/temp.log`
-      const push = () => fs.writeFile(filename, 'test\n', { encoding: 'utf-8', flag: 'a' })
+      const push = () => fs.writeFile(
+        filename, 'test\n', { encoding: 'utf-8', flag: 'a' }
+      )
 
       await push() // create file if not exists
       const server = new HyperCoreFileLogger(filename, () => ram())
@@ -23,7 +25,9 @@ module.exports = () => {
       await push()
       await push()
 
-      const client = new HyperCoreLogReader(() => ram(), server.feedKey, null, null, { snapshot: false, tail: true })
+      const client = new HyperCoreLogReader(
+        () => ram(), server.feedKey, null, null, { snapshot: false, tail: true }
+      )
       client.on('data', (data) => { databuff.push(data.toString()) })
 
       await sleep(500)

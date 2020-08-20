@@ -17,11 +17,17 @@ class HyperCoreUdpLogger extends HyperCoreLogger {
    * @param {string|Buffer} [feedOpts.secretKey]
    * @param {boolean} [feedOpts.storeSecretKey]
    * @param {number} [feedOpts.storageCacheSize]
-   * @param {(index: number, data: any, peer: Peer, cb: Function) => void} [feedOpts.onwrite]
+   * @param {
+        (index: number, data: any, peer: Peer, cb: Function) => void
+      } [feedOpts.onwrite]
    * @param {boolean} [feedOpts.stats]
-   * @param {Object} [feedOpts.crypto]: {
-   * @param {(data: any, secretKey: string|Buffer, cb: Function) => void} feedOpts.crypto.sign
-   * @param {(signature: any, data: any, key: string|Buffer, cb: function name(params)} feedOpts.crypto.verify
+   * @param {Object} [feedOpts.crypto]
+   * @param {
+        (data, secretKey: string|Buffer, cb: Function) => void
+      } feedOpts.crypto.sign
+   * @param {
+        (signature, data, key: string|Buffer, cb: Function) => void
+      } feedOpts.crypto.verify
    * @param {Object} [feedOpts.noiseKeyPair]
    * @param {string|Buffer} feedOpts.noiseKeyPair.publicKey
    * @param {string|Buffer} feedOpts.noiseKeyPair.secretKey
@@ -40,7 +46,9 @@ class HyperCoreUdpLogger extends HyperCoreLogger {
    * @param {number} swarmOpts.queue.forget.banned
    * @param {boolean} [swarmOpts.multiplex]
    */
-  constructor (port, feedDir, feedKey = null, feedOpts = null, swarmOpts = null) {
+  constructor (
+    port, feedDir, feedKey = null, feedOpts = null, swarmOpts = null
+  ) {
     super(feedDir, feedKey, feedOpts, swarmOpts)
 
     this.port = port

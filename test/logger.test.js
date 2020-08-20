@@ -20,7 +20,9 @@ module.exports = () => {
       push()
       push()
 
-      const client = new HyperCoreLogReader(() => ram(), server.feedKey, null, null, { snapshot: false, tail: true })
+      const client = new HyperCoreLogReader(
+        () => ram(), server.feedKey, null, null, { snapshot: false, tail: true }
+      )
       client.on('data', (data) => { databuff.push(data.toString()) })
 
       await sleep(500)

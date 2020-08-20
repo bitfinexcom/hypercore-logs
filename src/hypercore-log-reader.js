@@ -18,11 +18,17 @@ class HyperCoreLogReader extends EventEmitter {
    * @param {string|Buffer} [feedOpts.secretKey]
    * @param {boolean} [feedOpts.storeSecretKey]
    * @param {number} [feedOpts.storageCacheSize]
-   * @param {(index: number, data: any, peer: Peer, cb: Function) => void} [feedOpts.onwrite]
+   * @param {
+        (index: number, data: any, peer: Peer, cb: Function) => void
+      } [feedOpts.onwrite]
    * @param {boolean} [feedOpts.stats]
-   * @param {Object} [feedOpts.crypto]: {
-   * @param {(data: any, secretKey: string|Buffer, cb: Function) => void} feedOpts.crypto.sign
-   * @param {(signature: any, data: any, key: string|Buffer, cb: function name(params)} feedOpts.crypto.verify
+   * @param {Object} [feedOpts.crypto]
+   * @param {
+        (data, secretKey: string|Buffer, cb: Function) => void
+      } feedOpts.crypto.sign
+   * @param {
+        (signature, data, key: string|Buffer, cb: Function) => void
+      } feedOpts.crypto.verify
    * @param {Object} [feedOpts.noiseKeyPair]
    * @param {string|Buffer} feedOpts.noiseKeyPair.publicKey
    * @param {string|Buffer} feedOpts.noiseKeyPair.secretKey
@@ -50,7 +56,9 @@ class HyperCoreLogReader extends EventEmitter {
    * @param {boolean} [streamOpts.wait]
    * @param {number} [streamOpts.batch]
    */
-  constructor (feedDir, feedKey, feedOpts = null, swarmOpts = null, streamOpts = null) {
+  constructor (
+    feedDir, feedKey, feedOpts = null, swarmOpts = null, streamOpts = null
+  ) {
     super()
 
     feedOpts = feedOpts || {}
