@@ -97,6 +97,18 @@ class HyperCoreLogReader extends EventEmitter {
 
           this.feed.update(() => {
             this.feedKey = this.feed.key.toString('hex')
+            const flen = this.feed.length
+
+            if (this.streamOpts.start && this.streamOpts.start < 0) {
+              this.streamOpts.start = flen + this.streamOpts.start
+              if (this.streamOpts.start < 0) this.streamOpts.start = 0
+            }
+
+            if (this.streamOpts.end && this.streamOpts.end < 0) {
+              this.streamOpts.end = flen + this.streamOpts.end
+              if (this.streamOpts.end < 0) this.streamOpts.end = 0
+            }
+
             this.stream = this.feed.createReadStream(this.streamOpts)
               .on('data', (data) => this.emit('data', data))
 

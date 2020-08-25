@@ -27,11 +27,13 @@ const yargs = require('yargs')
       })
       .option('start', {
         type: 'number',
-        description: 'feed read start, ignored in case if tail is specified'
+        desc: 'feed read start, ignored in case if tail is specified, ' +
+          'if negative it\'s considered from feed end'
       })
       .option('end', {
         type: 'number',
-        description: 'feed read end, ignored in case if tail is specified'
+        desc: 'feed read end, ignored in case if tail is specified, ' +
+          'if negative it\'s considered from feed end'
       })
   )
   .command(

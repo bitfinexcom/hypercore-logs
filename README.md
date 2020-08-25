@@ -70,8 +70,10 @@ Options:
                                                              [string] [required]
   --datadir, -d  feed data directory, if ommited RAM memory will be used[string]
   --tail         tail the log file                                     [boolean]
-  --start        feed read start, ignored in case if tail is specified  [number]
-  --end          feed read end, ignored in case if tail is specified    [number]
+  --start        feed read start, ignored in case if tail is specified, if
+                 negative it's considered from feed end                 [number]
+  --end          feed read end, ignored in case if tail is specified, if
+                 negative it's considered from feed end                 [number]
 ```
 
 ## Examples
