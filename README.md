@@ -53,6 +53,8 @@ Options:
                                                                         [string]
   --file, -f        file that will be tailed, use either file or port option
                                                                         [string]
+  --republish       republish entire file to the stream, used alongside file
+                    option                            [boolean] [default: false]
   --port, -p        UDP server port, use either file or port option     [number]
 ```
 
