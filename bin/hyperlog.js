@@ -62,6 +62,11 @@ const yargs = require('yargs')
         alias: 'f',
         description: 'file that will be tailed, use either file or port option'
       })
+      .option('republish', {
+        type: 'boolean',
+        default: false,
+        desc: 'republish entire file to the stream, used alongside file option'
+      })
       .option('port', {
         type: 'number',
         alias: 'p',
@@ -124,7 +129,7 @@ const main = async () => {
       const client = new HyperCoreLogReader(
         storage, key, null, null, streamOpts
       )
-      client.on('data', (data) => console.log(data.toString().trim()))
+      client.on('data', (data) => console.log(data.toString().trimRight()))
 
       await client.start()
     }
@@ -143,7 +148,8 @@ const main = async () => {
         feed = new HyperCoreUdpLogger(argv.port, storage, key, { secretKey })
       } else if (argv.file) {
         if (!argv.file) throw new Error('ERR_FILE_MISSING')
-        feed = new HyperCoreFileLogger(argv.file, storage, key, { secretKey })
+        feed = new HyperCoreFileLogger(argv.file, argv.republish === true,
+          storage, key, { secretKey })
       } else {
         throw new Error('ERR_TRANSPORT_MISSING')
       }

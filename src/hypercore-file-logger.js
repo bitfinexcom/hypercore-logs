@@ -1,12 +1,15 @@
 'use strict'
 
 const debug = require('debug')('hcore-logger')
+const fs = require('fs')
+const readline = require('readline')
 const HyperCoreLogger = require('./hypercore-logger')
 const Tail = require('nodejs-tail')
 
 class HyperCoreFileLogger extends HyperCoreLogger {
   /**
    * @param {string} filepath Path that will be tailed
+   * @param {boolean} republish Republish entire file to feed
    * @param {string|Function} feedDir
    * @param {string|Buffer} [feedKey]
    *
@@ -47,11 +50,15 @@ class HyperCoreFileLogger extends HyperCoreLogger {
    * @param {boolean} [swarmOpts.multiplex]
    */
   constructor (
-    filepath, feedDir, feedKey = null, feedOpts = null, swarmOpts = null
+    filepath, republish,
+    feedDir, feedKey = null, feedOpts = null, swarmOpts = null
   ) {
     super(feedDir, feedKey, feedOpts, swarmOpts)
 
-    this.tail = new Tail(filepath)
+    this.republish = republish
+    this.filepath = filepath
+
+    this.tail = new Tail(this.filepath)
     this.tail.on('line', (line) => {
       const data = line + '\n'
       this.feed.append(data)
@@ -60,6 +67,19 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
   async start () {
     await super.start()
+    if (this.republish) {
+      const encoding = this.feedOpts.valueEncoding
+      const rstream = fs.createReadStream(this.filepath, { encoding })
+
+      const rl = readline.createInterface({
+        input: rstream,
+        crlfDelay: Infinity
+      })
+
+      for await (const line of rl) {
+        this.feed.append(line + '\n')
+      }
+    }
     this.tail.watch()
 
     debug('feed started listening for changes on %s', this.tail.filename)
