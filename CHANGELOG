@@ -1,3 +1,6 @@
+# 0.2.0
+- feature: added support for reading last x feed data
+
 # 0.1.0
 - feature: added generic logger
 - feature: added log reader
