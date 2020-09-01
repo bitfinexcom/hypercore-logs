@@ -38,7 +38,6 @@
   "devDependencies": {
     "chai": "^4.2.0",
     "dirty-chai": "^2.0.1",
-    "husky": "^4.2.5",
     "mocha": "^8.1.1",
     "standard": "^14.3.4"
   },
@@ -51,11 +50,5 @@
       "beforeEach",
       "afterEach"
     ]
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint",
-      "pre-push": "npm run test"
-    }
   }
 }

@@ -83,6 +83,11 @@ class HyperCoreLogger {
           debug('secret-key: %s', this.feed.secretKey.toString('hex'))
           resolve()
         })
+
+        this.swarm.on('connection', (socket) => {
+          const { remoteAddress, remotePort } = socket
+          debug('peer connected from %s:%d', remoteAddress, remotePort)
+        })
       })
     })
   }
