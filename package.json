@@ -1,0 +1,61 @@
+{
+  "name": "hypercore-logs",
+  "version": "0.2.1",
+  "description": "hypercore log server and client",
+  "main": "index.js",
+  "bin": {
+    "hyperlog": "bin/hyperlog.js"
+  },
+  "scripts": {
+    "format": "./node_modules/.bin/standard --fix",
+    "lint": "./node_modules/.bin/standard",
+    "test": "npm run lint && npm run unit",
+    "unit": "NODE_ENV=test ./node_modules/.bin/mocha ./test/index.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitfinexcom/hypercore-logs.git"
+  },
+  "keywords": [
+    "hypercore",
+    "logs"
+  ],
+  "author": "vigan.abd",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bitfinexcom/hypercore-logs/issues"
+  },
+  "homepage": "https://github.com/bitfinexcom/hypercore-logs#readme",
+  "dependencies": {
+    "@hyperswarm/replicator": "^1.8.0",
+    "debug": "^4.1.1",
+    "hypercore": "^9.5.0",
+    "lodash": "^4.17.20",
+    "nodejs-tail": "^1.1.0",
+    "random-access-memory": "^3.1.1",
+    "yargs": "^15.4.1"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "dirty-chai": "^2.0.1",
+    "husky": "^4.2.5",
+    "mocha": "^8.1.1",
+    "standard": "^14.3.4"
+  },
+  "standard": {
+    "globals": [
+      "it",
+      "describe",
+      "before",
+      "after",
+      "beforeEach",
+      "afterEach"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint",
+      "pre-push": "npm run test"
+    }
+  }
+}

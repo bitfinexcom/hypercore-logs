@@ -1,0 +1,15 @@
+# 0.2.1
+- feature: added support for republishing file in feed
+
+# 0.2.0
+- feature: added support for reading last x feed data
+
+# 0.1.0
+- feature: added generic logger
+- feature: added log reader
+- feature: added file logger
+- feature: added udp logger
+- feature: added cli support
+
+# 0.0.1
+* Initial setup
