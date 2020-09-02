@@ -6,6 +6,7 @@ process.env.DEBUG = 'hcore-logger'
 
 const fs = require('fs')
 const ram = require('random-access-memory')
+const pkg = require('../package.json')
 const yargs = require('yargs')
   .command(
     'read',
@@ -43,7 +44,7 @@ const yargs = require('yargs')
       type: 'string',
       alias: 'k',
       description: 'feed public key, use either hex string or path to file, ' +
-        'if not specified alongside with \'secret-key\'' +
+        'if not specified alongside with \'secret-key\' ' +
         'it will generate a new one'
     })
       .option('secret-key', {
@@ -60,7 +61,9 @@ const yargs = require('yargs')
       .option('file', {
         type: 'string',
         alias: 'f',
-        description: 'file that will be tailed, use either file or port option'
+        desc: 'file,dir or glob pattern that will be tailed, ' +
+          'use quoted arg when passing globs! ' +
+          'Use either file or port option.'
       })
       .option('republish', {
         type: 'boolean',
@@ -75,12 +78,13 @@ const yargs = require('yargs')
   )
   .demandCommand()
   .recommendCommands()
+  .version(pkg.version)
   .help()
 
 const {
   HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
 } = require('../')
-const { isHexStr, fullpath } = require('../src/helper')
+const { isHexStr, fullPath } = require('../src/helper')
 
 const cmds = ['read', 'write']
 
@@ -92,7 +96,7 @@ const parseKey = (key, keylen, warning) => {
 
     if (isHexStr(key) && key.length === keylen) return Buffer.from(key, 'hex')
 
-    return fs.readFileSync(fullpath(key))
+    return fs.readFileSync(fullPath(key))
   } catch (err) {
     console.warn('WARNING_INVALID_KEY: ' + warning, err)
     return null
@@ -104,7 +108,7 @@ const parseStorage = (dir) => {
     return () => ram()
   }
 
-  return fullpath(dir)
+  return fullPath(dir)
 }
 
 const main = async () => {
