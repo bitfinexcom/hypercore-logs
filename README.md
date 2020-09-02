@@ -51,7 +51,8 @@ Options:
                     one                                                 [string]
   --datadir, -d     feed data directory, if ommited RAM memory will be used
                                                                         [string]
-  --file, -f        file that will be tailed, use either file or port option
+  --file, -f        file, dir or glob pattern that will be tailed, use quoted
+                    arg when passing globs! Use either file or port option.
                                                                         [string]
   --republish       republish entire file to the stream, used alongside file
                     option                            [boolean] [default: false]
@@ -87,6 +88,24 @@ hyperlog write --file ../logs/1597852241433.log --datadir ../tmp
 hcore-logger key: 3c4e86d7ffdaf790d61c62bb1a025f2fa73b3881c19178ca3d08767b59c46023 +0ms
 hcore-logger secret-key: c8308cbeb469ee4a0a9add423bfd0197198cc08f61a8a029a0afd47f8930c84b3c4e86d7ffdaf790d61c62bb1a025f2fa73b3881c19178ca3d08767b59c46023 +5ms
 hcore-logger feed started listening for changes on ../logs/1597852241433.log +0ms
+```
+
+### Example - tail dir
+
+```console
+hyperlog write --file ../logs
+hcore-logger key: 482233ad2a7575010f4f9a7a19e013f5d6fa52f83b5f282b7b2c9928c6b334de +0ms
+hcore-logger secret-key: 6601acc4386c805f7a95f675369a6c96d6c5a207162eb0397a89a007fb282221482233ad2a7575010f4f9a7a19e013f5d6fa52f83b5f282b7b2c9928c6b334de +2ms
+hcore-logger feed started listening for changes on /home/vigan/Desktop/bitfinex/logs/test1.log, /home/vigan/Desktop/bitfinex/logs/test2.log +0ms
+```
+
+### Example - tail glob pattern
+
+```console
+hyperlog write --file '../logs/**/*.log'
+hcore-logger key: e686ec27b4699bc3039c344d2fd9a52daaf022fcac986dc345c2d49b3b6174b9 +0ms
+hcore-logger secret-key: 233a0e66b2f6dc46c7bedf0d60c49e47744c0758d5a41ff5ed0ee54364c1e704e686ec27b4699bc3039c344d2fd9a52daaf022fcac986dc345c2d49b3b6174b9 +3ms
+hcore-logger feed started listening for changes on /home/vigan/Desktop/bitfinex/logs/test1.log, /home/vigan/Desktop/bitfinex/logs/test2.log +0ms
 ```
 
 ### Example - udp server

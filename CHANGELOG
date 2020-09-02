@@ -1,3 +1,8 @@
+# 0.3.0
+- feature: add multi file tail support
+- feature: add glob pattern support for files
+- feature: track connections on log writer
+
 # 0.2.1
 - feature: added support for republishing file in feed
 

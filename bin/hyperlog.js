@@ -61,7 +61,7 @@ const yargs = require('yargs')
       .option('file', {
         type: 'string',
         alias: 'f',
-        desc: 'file,dir or glob pattern that will be tailed, ' +
+        desc: 'file, dir or glob pattern that will be tailed, ' +
           'use quoted arg when passing globs! ' +
           'Use either file or port option.'
       })
