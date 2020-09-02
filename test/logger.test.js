@@ -27,10 +27,11 @@ module.exports = () => {
 
       await sleep(500)
       await client.start()
-      await sleep(500)
+      await sleep(3000)
 
       push()
       push()
+      await sleep(500)
 
       await Promise.all([
         server.stop(),
@@ -61,7 +62,7 @@ module.exports = () => {
 
       await sleep(500)
       await client.start()
-      await sleep(500)
+      await sleep(3000)
 
       await Promise.all([
         server.stop(),
