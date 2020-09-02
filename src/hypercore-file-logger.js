@@ -71,6 +71,8 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     await super.start()
 
     await Promise.all(files.map(async (file) => {
+      const prefix = files.length > 1 ? file + ' >>> ' : ''
+
       if (this.republish) {
         const encoding = this.feedOpts.valueEncoding
         const rstream = fs.createReadStream(file, { encoding })
@@ -81,11 +83,10 @@ class HyperCoreFileLogger extends HyperCoreLogger {
         })
 
         for await (const line of rl) {
-          this.feed.append(line + '\n')
+          this.feed.append(prefix + line + '\n')
         }
       }
 
-      const prefix = files.length > 1 ? file + ' >>> ' : ''
       const tail = new Tail(file)
       tail.on('line', (line) => {
         const data = prefix + line + '\n'
