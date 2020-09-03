@@ -83,7 +83,10 @@ class HyperCoreFileLogger extends HyperCoreLogger {
         })
 
         for await (const line of rl) {
-          this.feed.append(prefix + line + '\n')
+          await new Promise((resolve, reject) => {
+            const data = prefix + line + '\n'
+            this.feed.append(data, (err) => err ? reject(err) : resolve())
+          })
         }
       }
 
