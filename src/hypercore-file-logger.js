@@ -1,14 +1,16 @@
 'use strict'
 
+const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const fs = require('fs')
 const readline = require('readline')
 const HyperCoreLogger = require('./hypercore-logger')
 const Tail = require('nodejs-tail')
+const { resolvePaths } = require('./helper')
 
 class HyperCoreFileLogger extends HyperCoreLogger {
   /**
-   * @param {string} filepath Path that will be tailed
+   * @param {string} pathlike File path or glob pattern that will be tailed
    * @param {boolean} republish Republish entire file to feed
    * @param {string|Function} feedDir
    * @param {string|Buffer} [feedKey]
@@ -50,43 +52,61 @@ class HyperCoreFileLogger extends HyperCoreLogger {
    * @param {boolean} [swarmOpts.multiplex]
    */
   constructor (
-    filepath, republish,
+    pathlike, republish,
     feedDir, feedKey = null, feedOpts = null, swarmOpts = null
   ) {
     super(feedDir, feedKey, feedOpts, swarmOpts)
 
     this.republish = republish
-    this.filepath = filepath
+    this.pathlike = pathlike
 
-    this.tail = new Tail(this.filepath)
-    this.tail.on('line', (line) => {
-      const data = line + '\n'
-      this.feed.append(data)
-    })
+    /** @type {Object<string, Tail>} */
+    this.fileTails = {}
   }
 
   async start () {
+    const files = await resolvePaths(this.pathlike)
+    if (!files.length) throw new Error('ERR_FILE_NOT_FOUND')
+
     await super.start()
-    if (this.republish) {
-      const encoding = this.feedOpts.valueEncoding
-      const rstream = fs.createReadStream(this.filepath, { encoding })
 
-      const rl = readline.createInterface({
-        input: rstream,
-        crlfDelay: Infinity
-      })
+    await Promise.all(files.map(async (file) => {
+      const prefix = files.length > 1 ? file + ' >>> ' : ''
 
-      for await (const line of rl) {
-        this.feed.append(line + '\n')
+      if (this.republish) {
+        const encoding = this.feedOpts.valueEncoding
+        const rstream = fs.createReadStream(file, { encoding })
+
+        const rl = readline.createInterface({
+          input: rstream,
+          crlfDelay: Infinity
+        })
+
+        for await (const line of rl) {
+          await new Promise((resolve, reject) => {
+            const data = prefix + line + '\n'
+            this.feed.append(data, (err) => err ? reject(err) : resolve())
+          })
+        }
       }
-    }
-    this.tail.watch()
 
-    debug('feed started listening for changes on %s', this.tail.filename)
+      const tail = new Tail(file)
+      tail.on('line', (line) => {
+        const data = prefix + line + '\n'
+        this.feed.append(data)
+      })
+      tail.watch()
+
+      this.fileTails[file] = tail
+    }))
+
+    debug('feed started listening for changes on %s', files.join(', '))
   }
 
   async stop () {
-    this.tail.close()
+    _.values(this.fileTails).forEach(tail => {
+      tail.close()
+    })
     await super.stop()
   }
 }
