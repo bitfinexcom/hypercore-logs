@@ -2,8 +2,11 @@
 
 const chai = require('chai')
   .use(require('dirty-chai'))
+const fs = require('fs')
+const path = require('path')
+const os = require('os')
 const { expect } = chai
-const { fullPath, isDir, isGlob, fExists, globPath, resolvePaths, isHexStr } = require('../src/helper')
+const { fullPath, isDir, isGlob, isUsrDir, fExists, globPath, resolveUsrDir, resolvePaths, isHexStr } = require('../src/helper')
 
 module.exports = () => {
   describe('helper tests', () => {
@@ -41,6 +44,33 @@ module.exports = () => {
       expect(isGlob('**/*.log')).to.be.true()
     })
 
+    it('isUsrDir - it should return true in case path starts with user dir (any os)', () => {
+      const backup = os.platform
+
+      os.platform = () => 'win32'
+      expect(isUsrDir('%UserProfile%\\testing')).to.be.true()
+      expect(isUsrDir('%userprofile%\\testing')).to.be.true()
+      expect(isUsrDir('%USERPROFILE%/testing')).to.be.true()
+
+      os.platform = () => 'linux'
+      expect(isUsrDir('~/testing')).to.be.true()
+
+      os.platform = backup
+    })
+
+    it('isUsrDir - it should return false in case path doesn\'t start with user dir (any os)', () => {
+      const backup = os.platform
+
+      os.platform = () => 'win32'
+      expect(isUsrDir('\\%UserProfile%\\testing')).to.be.false()
+      expect(isUsrDir('C:\\\\%userprofile%\\testing')).to.be.false()
+
+      os.platform = () => 'linux'
+      expect(isUsrDir('./~/testing')).to.be.false()
+
+      os.platform = backup
+    })
+
     it('fExists - it should return false when file/dir doesn\'t exist', async () => {
       const res = await fExists('./test/helper.ts')
       expect(res).to.be.false()
@@ -68,6 +98,35 @@ module.exports = () => {
       expect(res.every(p => typeof p === 'string')).to.be.true()
     })
 
+    it('resolveUsrDir - it should replace home var with full user path in case path starts with user dir (any os)', () => {
+      const backup = os.platform
+
+      os.platform = () => 'win32'
+      let fullpath = os.homedir() + '\\testing'
+      expect(resolveUsrDir('%UserProfile%\\testing')).to.be.equal(fullpath)
+      expect(resolveUsrDir('%userprofile%\\testing')).to.be.equal(fullpath)
+      expect(resolveUsrDir('%USERPROFILE%\\testing')).to.be.equal(fullpath)
+
+      os.platform = () => 'linux'
+      fullpath = path.posix.join(os.homedir(), 'testing')
+      expect(resolveUsrDir('~/testing')).to.be.equal(fullpath)
+
+      os.platform = backup
+    })
+
+    it('resolveUsrDir - it should return same path in case path doesn\'t start with user dir (any os)', () => {
+      const backup = os.platform
+
+      os.platform = () => 'win32'
+      expect(resolveUsrDir('\\%UserProfile%\\testing')).to.be.equal('\\%UserProfile%\\testing')
+      expect(resolveUsrDir('C:\\\\%userprofile%\\testing')).to.be.equal('C:\\\\%userprofile%\\testing')
+
+      os.platform = () => 'linux'
+      expect(resolveUsrDir('./~/testing')).to.be.equal('./~/testing')
+
+      os.platform = backup
+    })
+
     it('resolvePaths - it should return empty array when no match found', async () => {
       const results = await Promise.all([
         resolvePaths('./test/*.ts'),
@@ -82,11 +141,17 @@ module.exports = () => {
     })
 
     it('resolvePaths - it should return array of fullpath files when matches found', async () => {
+      const usrDir = os.platform() === 'win32' ? '%userprofile%' : '~'
+      const tempfile = path.join(os.homedir(), 'test.log')
+      await fs.promises.writeFile(tempfile, 'test', { flag: 'w', encoding: 'utf-8' })
+
       const results = await Promise.all([
+        resolvePaths(path.join(usrDir, '*.log')),
         resolvePaths('./test/*.js'),
         resolvePaths('./test/helper.js'),
         resolvePaths('./test')
       ])
+      await fs.promises.unlink(tempfile)
 
       results.forEach(res => {
         expect(res).to.be.an('array')

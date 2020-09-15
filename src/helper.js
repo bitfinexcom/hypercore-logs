@@ -2,6 +2,7 @@
 
 const fs = require('fs')
 const glob = require('glob')
+const os = require('os')
 const path = require('path')
 
 /**
@@ -31,6 +32,15 @@ const isGlob = (pathlike) => /\*|\?|\^|!|\+|@|\[|\]/.test(pathlike)
 
 /**
  * @param {string} pathlike
+ * @returns {boolean}
+ */
+const isUsrDir = (pathlike) => {
+  const usrDir = os.platform() === 'win32' ? '%userprofile%' : '~'
+  return new RegExp('^' + usrDir, 'i').test(pathlike)
+}
+
+/**
+ * @param {string} pathlike
  * @returns {Promise<boolean>}
  */
 const fExists = async (pathlike) => {
@@ -57,9 +67,22 @@ const globPath = async (pathlike) => {
 
 /**
  * @param {string} pathlike
+ * @returns {string}
+ */
+const resolveUsrDir = (pathlike) => {
+  const usrDir = os.platform() === 'win32' ? '%userprofile%' : '~'
+  return pathlike.replace(new RegExp('^' + usrDir, 'i'), os.homedir())
+}
+
+/**
+ * @param {string} pathlike
  * @returns {Promise<string[]>}
  */
 const resolvePaths = async (pathlike) => {
+  if (isUsrDir(pathlike)) {
+    pathlike = resolveUsrDir(pathlike)
+  }
+
   if (isGlob(pathlike)) return globPath(pathlike)
 
   if (!await fExists(pathlike)) return []
@@ -84,8 +107,10 @@ module.exports = {
   fullPath,
   isDir,
   isGlob,
+  isUsrDir,
   fExists,
   globPath,
+  resolveUsrDir,
   resolvePaths,
   isHexStr
 }
