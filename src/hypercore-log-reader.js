@@ -92,31 +92,29 @@ class HyperCoreLogReader extends EventEmitter {
       this.feed.ready((err) => {
         if (err) return reject(err)
 
-        this.swarm = replicate(this.feed, this.swarmOpts, (err) => {
-          if (err) return reject(err)
+        this.swarm = replicate(this.feed, this.swarmOpts)
 
-          this.feed.update(() => {
-            this.feedKey = this.feed.key.toString('hex')
-            const flen = this.feed.length
+        this.feed.update({ ifAvailable: true }, () => {
+          this.feedKey = this.feed.key.toString('hex')
+          const flen = this.feed.length
 
-            if (this.streamOpts.start && this.streamOpts.start < 0) {
-              this.streamOpts.start = flen + this.streamOpts.start
-              if (this.streamOpts.start < 0) this.streamOpts.start = 0
-            }
+          if (this.streamOpts.start && this.streamOpts.start < 0) {
+            this.streamOpts.start = flen + this.streamOpts.start
+            if (this.streamOpts.start < 0) this.streamOpts.start = 0
+          }
 
-            if (this.streamOpts.end && this.streamOpts.end < 0) {
-              this.streamOpts.end = flen + this.streamOpts.end
-              if (this.streamOpts.end < 0) this.streamOpts.end = 0
-            }
+          if (this.streamOpts.end && this.streamOpts.end < 0) {
+            this.streamOpts.end = flen + this.streamOpts.end
+            if (this.streamOpts.end < 0) this.streamOpts.end = 0
+          }
 
-            this.stream = this.feed.createReadStream(this.streamOpts)
-              .on('data', (data) => this.emit('data', data))
+          this.stream = this.feed.createReadStream(this.streamOpts)
+            .on('data', (data) => this.emit('data', data))
 
-            debug('key: %s', this.feedKey)
-            debug('feed length: %d', this.feed.length)
+          debug('key: %s', this.feedKey)
+          debug('feed length: %d', this.feed.length)
 
-            resolve()
-          })
+          resolve()
         })
       })
     })
