@@ -97,6 +97,27 @@ const resolvePaths = async (pathlike) => {
 }
 
 /**
+ * Creates a dir if not exists, if exists checks if it's dir or file
+ * @param {string} pathlike
+ */
+const createDir = async (pathlike) => {
+  const exists = await fExists(pathlike)
+  if (exists) return await isDir(pathlike)
+
+  await fs.promises.mkdir(pathlike, { recursive: true })
+  return true
+}
+
+/**
+ * Creates a dir if not exists, if exists checks if it's dir or file
+ * @param {string} pathlike
+ */
+const createFileDir = (pathlike) => {
+  const dirname = path.dirname(pathlike)
+  return createDir(dirname)
+}
+
+/**
  * @param {string} str
  * @returns {boolean}
  */
@@ -112,5 +133,7 @@ module.exports = {
   globPath,
   resolveUsrDir,
   resolvePaths,
+  createDir,
+  createFileDir,
   isHexStr
 }
