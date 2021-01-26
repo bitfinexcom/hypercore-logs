@@ -72,6 +72,16 @@ Options:
   --key, -k      feed public key, use either hex string or path to file
                                                              [string] [required]
   --datadir, -d  feed data directory, if ommited RAM memory will be used[string]
+  --output, -o   log output directory or file, if not provided output will be
+                 logged to console.                                     [string]
+  --input-dir    when multiple files are logged input-dir is used to demultiplex
+                 file logs so each logged file has it's own  output file. In
+                 case if it's used together with output option then the output
+                 files would be the part without input-dir. In case if it's used
+                 together with console option then it would remove input-dir
+                 from console logged file prefixes                      [string]
+  --console, -c  log output to console, if output provided and console ommited
+                 then output would be logged only in file!             [boolean]
   --tail         tail the log file                                     [boolean]
   --start        feed read start, ignored in case if tail is specified, if
                  negative it's considered from feed end                 [number]
@@ -127,6 +137,18 @@ another test message
 
 ```console
 hyperlog read --key 3c4e86d7ffdaf790d61c62bb1a025f2fa73b3881c19178ca3d08767b59c46023 --tail
+```
+
+### Example - read and store to file
+
+```console
+hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30fef8e --output test3.log --console
+```
+
+### Example - read and store to dir
+
+```console
+hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30fef8e --output test3/ --input-dir /home/dev/logs/
 ```
 
 ### Example - code
