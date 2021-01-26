@@ -5,6 +5,7 @@
 process.env.DEBUG = 'hcore-logger'
 
 const fs = require('fs')
+const path = require('path')
 const ram = require('random-access-memory')
 const pkg = require('../package.json')
 const yargs = require('yargs')
@@ -21,6 +22,27 @@ const yargs = require('yargs')
         type: 'string',
         alias: 'd',
         description: 'feed data directory, if ommited RAM memory will be used'
+      })
+      .option('output', {
+        type: 'string',
+        alias: 'o',
+        description: 'log output directory or file, if not provided output ' +
+          'will be logged to console.'
+      })
+      .option('input-dir', {
+        type: 'string',
+        description: 'when multiple files are logged input-dir is used to ' +
+          'demultiplex file logs so each logged file has it\'s own  ' +
+          'output file. In case if it\'s used together with output option ' +
+          'then the output files would be the part without input-dir. ' +
+          'In case if it\'s used together with console option then it would ' +
+          'remove input-dir from console logged file prefixes'
+      })
+      .option('console', {
+        type: 'boolean',
+        alias: 'c',
+        description: 'log output to console, if output provided and console ' +
+          'ommited then output would be logged only in file!'
       })
       .option('tail', {
         type: 'boolean',
@@ -84,7 +106,9 @@ const yargs = require('yargs')
 const {
   HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
 } = require('../')
-const { isHexStr, fullPath } = require('../src/helper')
+const {
+  createDir, createFileDir, escapeRegex, fullPath, isHexStr
+} = require('../src/helper')
 
 const cmds = ['read', 'write']
 
@@ -125,6 +149,22 @@ const main = async () => {
     if (cmd === 'read') {
       if (!key) throw new Error('ERR_KEY_REQUIRED')
 
+      const logConsole = argv.output ? argv.console : true
+      const logFile = argv.output ? fullPath(argv.output) : null
+      const inDir = argv['input-dir']
+        ? new RegExp('^' + escapeRegex(argv['input-dir']))
+        : null
+      const multiFileLog = !!inDir
+
+      if (logFile) {
+        const dirCreated = multiFileLog
+          ? await createDir(logFile)
+          : await createFileDir(logFile)
+        if (!dirCreated) {
+          throw new Error('ERR_MAKE_OUTPUD_DIR_FAILED')
+        }
+      }
+
       let streamOpts = {}
       if (typeof argv.start === 'number') streamOpts.start = argv.start
       if (typeof argv.end === 'number') streamOpts.end = argv.end
@@ -133,7 +173,26 @@ const main = async () => {
       const client = new HyperCoreLogReader(
         storage, key, null, null, streamOpts
       )
-      client.on('data', (data) => console.log(data.toString().trimRight()))
+
+      client.on('data', async (data) => {
+        let line = data.toString().trimRight()
+        if (multiFileLog) line = line.replace(inDir, '')
+
+        if (logConsole) console.log(line)
+
+        if (logFile) {
+          const flags = { flag: 'a' }
+          if (!multiFileLog) {
+            fs.writeFile(logFile, line + '\n', flags, () => { })
+            return
+          }
+
+          const [fpath, ...content] = line.split(' >>> ')
+          const outpath = path.join(logFile, fpath)
+          await createFileDir(outpath)
+          fs.writeFile(outpath, content.join(' >>> ') + '\n', flags, () => { })
+        }
+      })
 
       await client.start()
     }
