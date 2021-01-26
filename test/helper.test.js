@@ -6,7 +6,10 @@ const fs = require('fs')
 const path = require('path')
 const os = require('os')
 const { expect } = chai
-const { fullPath, isDir, isGlob, isUsrDir, fExists, globPath, resolveUsrDir, resolvePaths, isHexStr } = require('../src/helper')
+const {
+  fullPath, isDir, isGlob, isUsrDir, fExists, globPath,
+  resolveUsrDir, resolvePaths, isHexStr, createDir, createFileDir, escapeRegex
+} = require('../src/helper')
 
 module.exports = () => {
   describe('helper tests', () => {
@@ -158,6 +161,64 @@ module.exports = () => {
         expect(res.length).to.be.greaterThan(0)
         expect(res.every(p => typeof p === 'string')).to.be.true()
       })
+    })
+
+    it('createDir - it should return false in case if path exists and is file',
+      async () => {
+        const pathlike = path.join(__dirname, 'test')
+        await fs.promises.writeFile(pathlike, '')
+        const res = await createDir(pathlike)
+        await fs.promises.unlink(pathlike)
+        expect(res).to.be.false()
+      })
+
+    it('createDir - it should return true in case if path exists and is dir',
+      async () => {
+        const pathlike = path.join(__dirname, 'test')
+        await fs.promises.mkdir(pathlike)
+        const res = await createDir(pathlike)
+        const exists = await fExists(pathlike)
+        const dir = await isDir(pathlike)
+        await fs.promises.rmdir(pathlike)
+
+        expect(res).to.be.true()
+        expect(exists).to.be.true()
+        expect(dir).to.be.true()
+      })
+
+    it('createDir - it should create dir in case if path doesn\'t exists',
+      async () => {
+        const pathlike = path.join(__dirname, 'test', 'test2')
+        const res = await createDir(pathlike)
+        const exists = await fExists(pathlike)
+        const dir = await isDir(pathlike)
+        await fs.promises.rmdir(pathlike)
+        await fs.promises.rmdir(path.dirname(pathlike))
+
+        expect(res).to.be.true()
+        expect(exists).to.be.true()
+        expect(dir).to.be.true()
+      })
+
+    it('createFileDir - it should create dir in case if path doesn\'t exists',
+      async () => {
+        const pathlike = path.join(__dirname, 'test', 'test2', 'log.log')
+        const res = await createFileDir(pathlike)
+        const dirExists = await fExists(path.dirname(pathlike))
+        const fileExists = await fExists(pathlike)
+        const dir = await isDir(path.dirname(pathlike))
+        await fs.promises.rmdir(path.dirname(pathlike))
+        await fs.promises.rmdir(path.dirname(path.dirname(pathlike)))
+
+        expect(res).to.be.true()
+        expect(dirExists).to.be.true()
+        expect(fileExists).to.be.false()
+        expect(dir).to.be.true()
+      })
+
+    it('escapeRegex - it should escape regex special chars', () => {
+      const text = escapeRegex('^test$.*')
+      expect(text).to.be.equal('\\^test\\$\\.\\*')
     })
   })
 }
