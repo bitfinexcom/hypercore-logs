@@ -6,6 +6,7 @@ const { expect } = chai
 const { sleep } = require('./helper')
 
 const fs = require('fs').promises
+const path = require('path')
 const ram = require('random-access-memory')
 const { HyperCoreFileLogger, HyperCoreLogReader } = require('../')
 
@@ -13,7 +14,7 @@ module.exports = () => {
   describe('file logger tests', () => {
     it('file logger should push data from file to the reader', async () => {
       const databuff = []
-      const filename = `${__dirname}/temp.log`
+      const filename = path.join(__dirname, 'temp.log')
       const push = () => fs.writeFile(
         filename, 'test\n', { encoding: 'utf-8', flag: 'a' }
       )
@@ -48,7 +49,7 @@ module.exports = () => {
 
     it('file logger should republish entire file when specified', async () => {
       const databuff = []
-      const filename = `${__dirname}/temp.log`
+      const filename = path.join(__dirname, 'temp.log')
       const fcontent = 'test1\ntest2\ntest3\ntest4'
       fs.writeFile(filename, fcontent, { encoding: 'utf-8', flag: 'w' })
 
@@ -78,7 +79,7 @@ module.exports = () => {
     it('file logger should push data from dir to the reader', async () => {
       const databuff = []
       const dir = __dirname
-      const files = [`${dir}/temp1.log`, `${dir}/temp2.log`]
+      const files = [path.join(dir, 'temp1.log'), path.join(dir, 'temp2.log')]
       const push = (i) => fs.writeFile(
         files[i], 'test\n', { encoding: 'utf-8', flag: 'a' }
       )
@@ -112,10 +113,10 @@ module.exports = () => {
       expect(databuff.length).to.be.equal(2)
     }).timeout(1200000)
 
-    it('file logger should push data from glob pattern to the reader', async () => {
+    it('file logger should push data from glob to the reader', async () => {
       const databuff = []
       const dir = __dirname
-      const files = [`${dir}/temp1.log`, `${dir}/temp2.log`]
+      const files = [path.join(dir, 'temp1.log'), path.join(dir, 'temp2.log')]
       const push = (i) => fs.writeFile(
         files[i], 'test\n', { encoding: 'utf-8', flag: 'a' }
       )
