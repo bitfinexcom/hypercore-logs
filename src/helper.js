@@ -124,6 +124,13 @@ const createFileDir = (pathlike) => {
 const isHexStr = (str) => (typeof str === 'string' || str instanceof String) &&
   /^[0-9A-Fa-f]+$/.test(str)
 
+/**
+ * @param {string} str
+ */
+const escapeRegex = (str) => {
+  return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
+}
+
 module.exports = {
   fullPath,
   isDir,
@@ -135,5 +142,6 @@ module.exports = {
   resolvePaths,
   createDir,
   createFileDir,
-  isHexStr
+  isHexStr,
+  escapeRegex
 }
