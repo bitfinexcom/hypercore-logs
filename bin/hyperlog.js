@@ -161,7 +161,7 @@ const main = async () => {
           ? await createDir(logFile)
           : await createFileDir(logFile)
         if (!dirCreated) {
-          throw new Error('ERR_MAKE_OUTPUD_DIR_FAILED')
+          throw new Error('ERR_MAKE_OUTPUT_DIR_FAILED')
         }
       }
 
