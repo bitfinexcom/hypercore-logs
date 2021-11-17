@@ -186,11 +186,12 @@ const main = async () => {
             fs.writeFile(logFile, line + '\n', flags, () => { })
             return
           }
-
-          const [fpath, ...content] = line.split(' >>> ')
+          const delimiter = HyperCoreFileLogger.getFileDelimiter()
+          const [fpath, ...content] = line.split(delimiter)
           const outpath = path.join(logFile, fpath)
+
           await createFileDir(outpath)
-          fs.writeFile(outpath, content.join(' >>> ') + '\n', flags, () => { })
+          fs.writeFile(outpath, content.join(delimiter) + '\n', flags, () => { })
         }
       })
 

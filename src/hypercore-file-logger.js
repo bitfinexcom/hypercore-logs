@@ -64,6 +64,10 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     this.fileTails = {}
   }
 
+  static getFileDelimiter () {
+    return ' >>> '
+  }
+
   async start () {
     const files = await resolvePaths(this.pathlike)
     if (!files.length) throw new Error('ERR_FILE_NOT_FOUND')
@@ -71,7 +75,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     await super.start()
 
     await Promise.all(files.map(async (file) => {
-      const prefix = files.length > 1 ? file + ' >>> ' : ''
+      const prefix = files.length > 1 ? file + HyperCoreFileLogger.getFileDelimiter() : ''
 
       if (this.republish) {
         const encoding = this.feedOpts.valueEncoding
