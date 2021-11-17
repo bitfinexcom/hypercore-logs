@@ -5,7 +5,7 @@
 process.env.DEBUG = 'hcore-logger'
 
 const fs = require('fs')
-const path = require('path')
+const { join } = require('path')
 const ram = require('random-access-memory')
 const pkg = require('../package.json')
 const yargs = require('yargs')
@@ -186,12 +186,11 @@ const main = async () => {
             fs.writeFile(logFile, line + '\n', flags, () => { })
             return
           }
-          const delimiter = HyperCoreFileLogger.getFileDelimiter()
-          const [fpath, ...content] = line.split(delimiter)
-          const outpath = path.join(logFile, fpath)
+          const { path, content } = HyperCoreFileLogger.parseLine(line)
+          const outpath = join(logFile, path)
 
           await createFileDir(outpath)
-          fs.writeFile(outpath, content.join(delimiter) + '\n', flags, () => { })
+          fs.writeFile(outpath, content + '\n', flags, () => { })
         }
       })
 
