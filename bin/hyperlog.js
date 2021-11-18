@@ -135,6 +135,15 @@ const parseStorage = (dir) => {
   return fullPath(dir)
 }
 
+const writeLine = async (path, line) => {
+  const options = { flag: 'a' }
+  const data = line + '\n'
+
+  return new Promise((resolve, reject) => {
+    fs.writeFile(path, data, options, err => err ? reject(err) : resolve())
+  })
+}
+
 const main = async () => {
   try {
     const argv = yargs.argv
@@ -185,16 +194,15 @@ const main = async () => {
         if (logConsole) console.log(line)
 
         if (logFile) {
-          const flags = { flag: 'a' }
           if (!multiFileLog) {
-            fs.writeFile(logFile, line + '\n', flags, () => { })
+            await writeLine(logFile, line)
             return
           }
           const { path, content } = HyperCoreFileLogger.parseLine(line)
           const outpath = join(logFile, path)
 
           await createFileDir(outpath)
-          fs.writeFile(outpath, content + '\n', flags, () => { })
+          await writeLine(outpath, content)
         }
       })
 
