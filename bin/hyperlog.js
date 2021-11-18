@@ -107,7 +107,7 @@ const {
   HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
 } = require('../')
 const {
-  createDir, createFileDir, escapeRegex, fullPath, isHexStr
+  createDir, createFileDir, escapeRegex, fullPath, isHexStr, isDir
 } = require('../src/helper')
 
 const cmds = ['read', 'write']
@@ -150,7 +150,7 @@ const main = async () => {
       if (!key) throw new Error('ERR_KEY_REQUIRED')
 
       const logConsole = argv.output ? argv.console : true
-      const logFile = argv.output ? fullPath(argv.output) : null
+      let logFile = argv.output ? fullPath(argv.output) : null
       const inDir = argv['input-dir']
         ? new RegExp('^' + escapeRegex(argv['input-dir']))
         : null
@@ -173,6 +173,10 @@ const main = async () => {
       const client = new HyperCoreLogReader(
         storage, key, null, null, streamOpts
       )
+
+      if (!multiFileLog && await isDir(logFile)) {
+        logFile = join(logFile, `hyperlog-${Date.now()}.log`)
+      }
 
       client.on('data', async (data) => {
         let line = data.toString().trimRight()
