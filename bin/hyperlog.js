@@ -144,6 +144,20 @@ const writeLine = async (path, line) => {
   })
 }
 
+const prepareOutputDestination = async (path, multifile = false) => {
+  const dirCreated = multifile ? await createDir(path) : await createFileDir(path)
+
+  if (!dirCreated) {
+    throw new Error('ERR_MAKE_OUTPUT_DIR_FAILED')
+  }
+
+  if (multifile) {
+    return path
+  } else {
+    return await isDir(path) ? join(path, `hyperlog-${Date.now()}.log`) : path
+  }
+}
+
 const main = async () => {
   const argv = yargs.argv
   const [cmd] = argv._
@@ -158,33 +172,19 @@ const main = async () => {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
     const logConsole = argv.output ? argv.console : true
-    let logFile = argv.output ? fullPath(argv.output) : null
+    const output = argv.output ? fullPath(argv.output) : null
     const inDir = argv['input-dir']
       ? new RegExp('^' + escapeRegex(argv['input-dir']))
       : null
     const multiFileLog = !!inDir
-
-    if (logFile) {
-      const dirCreated = multiFileLog
-        ? await createDir(logFile)
-        : await createFileDir(logFile)
-      if (!dirCreated) {
-        throw new Error('ERR_MAKE_OUTPUT_DIR_FAILED')
-      }
-    }
+    const destination = output && await prepareOutputDestination(output, multiFileLog)
 
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
     if (typeof argv.end === 'number') streamOpts.end = argv.end
     if (argv.tail === true) streamOpts = { snapshot: false, tail: true }
 
-    const client = new HyperCoreLogReader(
-      storage, key, null, null, streamOpts
-    )
-
-    if (!multiFileLog && await isDir(logFile)) {
-      logFile = join(logFile, `hyperlog-${Date.now()}.log`)
-    }
+    const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
 
     client.on('data', async (data) => {
       let line = data.toString().trimRight()
@@ -192,15 +192,15 @@ const main = async () => {
 
       if (logConsole) console.log(line)
 
-      if (logFile) {
+      if (destination) {
         if (multiFileLog) {
           const { path, content } = HyperCoreFileLogger.parseLine(line)
-          const outpath = join(logFile, path)
+          const outpath = join(destination, path)
 
           await createFileDir(outpath)
           await writeLine(outpath, content)
         } else {
-          await writeLine(logFile, line)
+          await writeLine(destination, line)
         }
       }
     })
