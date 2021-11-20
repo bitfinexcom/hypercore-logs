@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const hypercore = require('hypercore')
-const replicate = require('@hyperswarm/replicator')
+const Replicator = require('@hyperswarm/replicator')
 
 class HyperCoreLogger {
   /**
@@ -75,13 +75,16 @@ class HyperCoreLogger {
       this.feed.ready((err) => {
         if (err) return reject(err)
 
-        this.swarm = replicate(this.feed, this.swarmOpts, (err) => {
-          if (err) return reject(err)
+        const replicator = new Replicator()
 
+        this.swarm = replicator
+        replicator.add(this.feed, this.swarmOpts).then(() => {
           this.feedKey = this.feed.key.toString('hex')
           debug('key: %s', this.feedKey)
           debug('secret-key: %s', this.feed.secretKey.toString('hex'))
           resolve()
+        }).catch(e => {
+          reject(err)
         })
 
         this.swarm.on('connection', (socket) => {

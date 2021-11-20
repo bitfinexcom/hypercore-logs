@@ -1,6 +1,6 @@
 {
   "name": "hypercore-logs",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "hypercore log server and client",
   "main": "index.js",
   "bin": {
@@ -27,14 +27,14 @@
   },
   "homepage": "https://github.com/bitfinexcom/hypercore-logs#readme",
   "dependencies": {
-    "@hyperswarm/replicator": "^1.8.0",
-    "debug": "^4.1.1",
-    "glob": "^7.1.6",
-    "hypercore": "^9.5.0",
-    "lodash": "^4.17.20",
-    "nodejs-tail": "^1.1.0",
-    "random-access-memory": "^3.1.1",
-    "yargs": "^15.4.1"
+    "@hyperswarm/replicator": "2.0.2",
+    "debug": "4.3.2",
+    "glob": "7.2.0",
+    "hypercore": "9.5.0",
+    "lodash": "^4.17.21",
+    "tail": "2.2.4",
+    "random-access-memory": "4.0.0",
+    "yargs": "^17.2.1"
   },
   "devDependencies": {
     "chai": "^4.2.0",

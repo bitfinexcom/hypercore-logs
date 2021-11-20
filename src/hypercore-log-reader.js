@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const hypercore = require('hypercore')
-const replicate = require('@hyperswarm/replicator')
+const Replicator = require('@hyperswarm/replicator')
 const { EventEmitter } = require('events')
 
 class HyperCoreLogReader extends EventEmitter {
@@ -92,7 +92,10 @@ class HyperCoreLogReader extends EventEmitter {
       this.feed.ready((err) => {
         if (err) return reject(err)
 
-        this.swarm = replicate(this.feed, this.swarmOpts)
+        const replicator = new Replicator()
+        replicator.add(this.feed, this.swarmOpts)
+
+        this.swarm = replicator
 
         this.feed.update({ ifAvailable: true }, () => {
           this.feedKey = this.feed.key.toString('hex')
