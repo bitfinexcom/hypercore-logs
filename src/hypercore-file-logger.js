@@ -64,6 +64,26 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     this.fileTails = {}
   }
 
+  static getFileDelimiter () {
+    return ' >>> '
+  }
+
+  static parseLine (line) {
+    const delimiter = HyperCoreFileLogger.getFileDelimiter()
+    const [path, ...content] = line.split(delimiter)
+
+    return {
+      path,
+      content: content.join(delimiter)
+    }
+  }
+
+  static formatLine (line, file = null) {
+    const prefix = file ? file + HyperCoreFileLogger.getFileDelimiter() : ''
+
+    return prefix + line
+  }
+
   async start () {
     const files = await resolvePaths(this.pathlike)
     if (!files.length) throw new Error('ERR_FILE_NOT_FOUND')
@@ -71,8 +91,6 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     await super.start()
 
     await Promise.all(files.map(async (file) => {
-      const prefix = files.length > 1 ? file + ' >>> ' : ''
-
       if (this.republish) {
         const encoding = this.feedOpts.valueEncoding
         const rstream = fs.createReadStream(file, { encoding })
@@ -84,7 +102,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
         for await (const line of rl) {
           await new Promise((resolve, reject) => {
-            const data = prefix + line + '\n'
+            const data = HyperCoreFileLogger.formatLine(line, files.length > 1 && file) + '\n'
             this.feed.append(data, (err) => err ? reject(err) : resolve())
           })
         }
@@ -92,7 +110,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
       const tail = new Tail(file)
       tail.on('line', (line) => {
-        const data = prefix + line + '\n'
+        const data = HyperCoreFileLogger.formatLine(line, files.length > 1 && file) + '\n'
         this.feed.append(data)
       })
       tail.watch()
