@@ -1,6 +1,6 @@
 {
   "name": "hypercore-logs",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "hypercore log server and client",
   "main": "index.js",
   "bin": {
