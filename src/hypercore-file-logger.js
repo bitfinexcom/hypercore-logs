@@ -105,7 +105,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
   async stop () {
     _.values(this.fileTails).forEach(tail => {
-      tail.close()
+      tail.unwatch()
     })
     await super.stop()
   }

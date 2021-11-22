@@ -72,35 +72,26 @@ class HyperCoreLogger {
     this.feed = hypercore(this.feedDir, this.feedKey, this.feedOpts)
 
     await new Promise((resolve, reject) => {
-      this.feed.ready((err) => {
-        if (err) return reject(err)
+      this.feed.ready((err) => err ? reject(err) : resolve())
+    })
 
-        const replicator = new Replicator()
+    this.swarm = new Replicator()
+    await this.swarm.add(this.feed, this.swarmOpts).then(() => {
+      this.feedKey = this.feed.key.toString('hex')
+      debug('key: %s', this.feedKey)
+      debug('secret-key: %s', this.feed.secretKey.toString('hex'))
+    })
 
-        this.swarm = replicator
-        replicator.add(this.feed, this.swarmOpts).then(() => {
-          this.feedKey = this.feed.key.toString('hex')
-          debug('key: %s', this.feedKey)
-          debug('secret-key: %s', this.feed.secretKey.toString('hex'))
-          resolve()
-        }).catch(e => {
-          reject(err)
-        })
-
-        this.swarm.on('connection', (socket) => {
-          const { remoteAddress, remotePort } = socket
-          debug('peer connected from %s:%d', remoteAddress, remotePort)
-        })
-      })
+    this.swarm.on('connection', (socket) => {
+      const { remoteAddress, remotePort } = socket
+      debug('peer connected from %s:%d', remoteAddress, remotePort)
     })
   }
 
   async stop () {
+    await this.swarm.destroy()
     await new Promise((resolve, reject) => {
-      this.swarm.destroy((err) => {
-        if (err) return reject(err)
-        this.feed.close((err) => err ? reject(err) : resolve())
-      })
+      this.feed.close((err) => err ? reject(err) : resolve())
     })
     debug('writer closed')
   }
