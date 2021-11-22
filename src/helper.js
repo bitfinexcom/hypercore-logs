@@ -131,6 +131,13 @@ const escapeRegex = (str) => {
   return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
 }
 
+/**
+ * @param {string} str
+ */
+const isLogPath = (str) => {
+  return str.match(/^.+[^/]+\.log$/)
+}
+
 module.exports = {
   fullPath,
   isDir,
@@ -143,5 +150,6 @@ module.exports = {
   createDir,
   createFileDir,
   isHexStr,
-  escapeRegex
+  escapeRegex,
+  isLogPath
 }
