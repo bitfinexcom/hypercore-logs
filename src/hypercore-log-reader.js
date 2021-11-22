@@ -3,7 +3,7 @@
 const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const hypercore = require('hypercore')
-const replicate = require('@hyperswarm/replicator')
+const Replicator = require('@hyperswarm/replicator')
 const { EventEmitter } = require('events')
 
 class HyperCoreLogReader extends EventEmitter {
@@ -89,45 +89,45 @@ class HyperCoreLogReader extends EventEmitter {
     this.feed = hypercore(this.feedDir, this.feedKey, this.feedOpts)
 
     await new Promise((resolve, reject) => {
-      this.feed.ready((err) => {
-        if (err) return reject(err)
+      this.feed.ready((err) => err ? reject(err) : resolve())
+    })
 
-        this.swarm = replicate(this.feed, this.swarmOpts)
+    this.swarm = new Replicator()
+    await this.swarm.add(this.feed, this.swarmOpts)
 
-        this.feed.update({ ifAvailable: true }, () => {
-          this.feedKey = this.feed.key.toString('hex')
-          const flen = this.feed.length
+    await new Promise((resolve) => {
+      this.feed.update({ ifAvailable: true }, () => {
+        this.feedKey = this.feed.key.toString('hex')
+        const flen = this.feed.length
 
-          if (this.streamOpts.start && this.streamOpts.start < 0) {
-            this.streamOpts.start = flen + this.streamOpts.start
-            if (this.streamOpts.start < 0) this.streamOpts.start = 0
-          }
+        if (this.streamOpts.start && this.streamOpts.start < 0) {
+          this.streamOpts.start = flen + this.streamOpts.start
+          if (this.streamOpts.start < 0) this.streamOpts.start = 0
+        }
 
-          if (this.streamOpts.end && this.streamOpts.end < 0) {
-            this.streamOpts.end = flen + this.streamOpts.end
-            if (this.streamOpts.end < 0) this.streamOpts.end = 0
-          }
+        if (this.streamOpts.end && this.streamOpts.end < 0) {
+          this.streamOpts.end = flen + this.streamOpts.end
+          if (this.streamOpts.end < 0) this.streamOpts.end = 0
+        }
 
-          this.stream = this.feed.createReadStream(this.streamOpts)
-            .on('data', (data) => this.emit('data', data))
+        this.stream = this.feed.createReadStream(this.streamOpts)
+          .on('data', (data) => this.emit('data', data))
 
-          debug('key: %s', this.feedKey)
-          debug('feed length: %d', this.feed.length)
+        debug('key: %s', this.feedKey)
+        debug('feed length: %d', this.feed.length)
 
-          resolve()
-        })
+        resolve()
       })
     })
   }
 
   async stop () {
+    await this.swarm.destroy()
+    this.stream.destroy()
+    this.removeAllListeners()
+
     await new Promise((resolve, reject) => {
-      this.swarm.destroy((err) => {
-        if (err) return reject(err)
-        this.stream.destroy()
-        this.removeAllListeners()
-        this.feed.close((err) => err ? reject(err) : resolve())
-      })
+      this.feed.close((err) => err ? reject(err) : resolve())
     })
 
     debug('reader closed')

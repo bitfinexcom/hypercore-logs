@@ -5,7 +5,7 @@ const debug = require('debug')('hcore-logger')
 const fs = require('fs')
 const readline = require('readline')
 const HyperCoreLogger = require('./hypercore-logger')
-const Tail = require('nodejs-tail')
+const Tail = require('tail').Tail
 const { resolvePaths } = require('./helper')
 
 class HyperCoreFileLogger extends HyperCoreLogger {
@@ -123,7 +123,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
   async stop () {
     _.values(this.fileTails).forEach(tail => {
-      tail.close()
+      tail.unwatch()
     })
     await super.stop()
   }
