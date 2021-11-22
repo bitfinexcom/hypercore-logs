@@ -11,7 +11,9 @@ Beside providing the API for custom integrations the package contains also it's 
 
 ## Setup
 
-You can simply install the tool by running `npm install -g hypercore-logs` and then you can use the cli by running `hyperlog` cmd through terminal. For custom code integration install it localy without `global` flag!
+You can simply install the tool by running `npm i -g https://github.com/bitfinexcom/hypercore-logs.git` and then you can use the cli by running `hyperlog` cmd through terminal. For custom code integration install it localy without `global` flag!
+
+Also if you want to install specific version (preffered way), you can install it with release tag, e.g. `npm i -g https://github.com/bitfinexcom/hypercore-logs.git#v0.3.3`
 
 ## Command line docs
 
