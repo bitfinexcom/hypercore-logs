@@ -139,9 +139,7 @@ const writeLine = async (path, line) => {
   const options = { flag: 'a' }
   const data = line + '\n'
 
-  return new Promise((resolve, reject) => {
-    fs.writeFile(path, data, options, err => err ? reject(err) : resolve())
-  })
+  return fs.promises.writeFile(path, data, options)
 }
 
 const prepareOutputDestination = async (path, multifile = false) => {
