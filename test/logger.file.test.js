@@ -150,7 +150,7 @@ module.exports = () => {
       expect(databuff.length).to.be.equal(2)
     }).timeout(1200000)
 
-    it ('parse simple line', () => {
+    it('parse simple line', () => {
       const line = 'some data'
       const { path, content } = HyperCoreFileLogger.parseLine(line)
 
@@ -158,7 +158,7 @@ module.exports = () => {
       expect(content).to.equal(line)
     })
 
-    it ('parse line with path', () => {
+    it('parse line with path', () => {
       const line = '/foo/bar/file.log >>> some data'
       const { path, content } = HyperCoreFileLogger.parseLine(line)
 
@@ -166,7 +166,7 @@ module.exports = () => {
       expect(content).to.equal('some data')
     })
 
-    it ('parse line with invalid path', () => {
+    it('parse line with invalid path', () => {
       const line = '/foo/bar/file.ext >>> some data'
       const { path, content } = HyperCoreFileLogger.parseLine(line)
 
@@ -174,7 +174,7 @@ module.exports = () => {
       expect(content).to.equal(line)
     })
 
-    it ('parse line with path and multiple delimiters', () => {
+    it('parse line with path and multiple delimiters', () => {
       const line = '/foo/bar/file.log >>> some data >>> any data'
       const { path, content } = HyperCoreFileLogger.parseLine(line)
 
