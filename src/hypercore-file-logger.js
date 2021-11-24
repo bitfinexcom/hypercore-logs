@@ -6,7 +6,7 @@ const fs = require('fs')
 const readline = require('readline')
 const HyperCoreLogger = require('./hypercore-logger')
 const Tail = require('tail').Tail
-const { resolvePaths, isLogPath } = require('./helper')
+const { resolvePaths } = require('./helper')
 
 class HyperCoreFileLogger extends HyperCoreLogger {
   /**
@@ -72,7 +72,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     const delimiter = HyperCoreFileLogger.getFileDelimiter()
     const [path, ...content] = line.split(delimiter)
 
-    const hasPath = content.length && isLogPath(path)
+    const hasPath = content.length
 
     return {
       path: hasPath ? path : null,

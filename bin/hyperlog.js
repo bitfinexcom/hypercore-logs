@@ -98,7 +98,7 @@ const {
   HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
 } = require('../')
 const {
-  createDir, createFileDir, fullPath, isHexStr, isLogPath, isDir
+  createDir, createFileDir, fullPath, isHexStr, isDir
 } = require('../src/helper')
 
 const cmds = ['read', 'write']
@@ -134,7 +134,7 @@ const writeLine = async (path, line) => {
 }
 
 const prepareOutputDestination = async (path) => {
-  const isDirectory = await isDir(path) || !isLogPath(path)
+  const isDirectory = await isDir(path)
   const dirCreated = isDirectory ? await createDir(path) : await createFileDir(path)
 
   if (!dirCreated) {

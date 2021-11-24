@@ -170,8 +170,8 @@ module.exports = () => {
       const line = '/foo/bar/file.ext >>> some data'
       const { path, content } = HyperCoreFileLogger.parseLine(line)
 
-      expect(path).to.be.null()
-      expect(content).to.equal(line)
+      expect(path).to.equal('/foo/bar/file.ext')
+      expect(content).to.equal('some data')
     })
 
     it('parse line with path and multiple delimiters', () => {
