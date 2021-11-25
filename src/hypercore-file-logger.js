@@ -3,10 +3,11 @@
 const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const fs = require('fs')
+const isGlob = require('is-glob')
+const chokidar = require('chokidar')
 const readline = require('readline')
 const HyperCoreLogger = require('./hypercore-logger')
 const Tail = require('tail').Tail
-const { resolvePaths } = require('./helper')
 
 class HyperCoreFileLogger extends HyperCoreLogger {
   /**
@@ -62,6 +63,8 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
     /** @type {Object<string, Tail>} */
     this.fileTails = {}
+    /** @type {chokidar.FSWatcher | null} */
+    this.watcher = null
   }
 
   static getFileDelimiter () {
@@ -130,18 +133,18 @@ class HyperCoreFileLogger extends HyperCoreLogger {
   }
 
   async start () {
-    const files = await resolvePaths(this.pathlike)
-    if (!files.length) throw new Error('ERR_FILE_NOT_FOUND')
-
     await super.start()
+    this.watcher = chokidar.watch(this.pathlike)
 
-    await Promise.all(files.map((file) => this.watchFile(file, files.length > 1)))
+    this.watcher.on('add', file => this.watchFile(file, isGlob(this.pathlike)))
+    this.watcher.on('unlink', file => this.unwatchFile(file))
 
-    debug('feed started listening for changes on %s', files.join(', '))
+    debug('feed started listening for changes on %s', this.pathlike)
   }
 
   async stop () {
     _.keys(this.fileTails).forEach(file => this.unwatchFile(file))
+    if (this.watcher) this.watcher.close()
     await super.stop()
   }
 }
