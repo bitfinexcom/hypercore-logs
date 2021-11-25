@@ -86,47 +86,62 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     return prefix + line
   }
 
+  /**
+   * @private
+   */
+  async watchFile (file, miltiple = false) {
+    if (this.republish) {
+      const encoding = this.feedOpts.valueEncoding
+      const rstream = fs.createReadStream(file, { encoding })
+
+      const rl = readline.createInterface({
+        input: rstream,
+        crlfDelay: Infinity
+      })
+
+      for await (const line of rl) {
+        await new Promise((resolve, reject) => {
+          const data = HyperCoreFileLogger.formatLine(line, miltiple && file) + '\n'
+          this.feed.append(data, (err) => err ? reject(err) : resolve())
+        })
+      }
+    }
+
+    const tail = new Tail(file)
+    tail.on('line', (line) => {
+      const data = HyperCoreFileLogger.formatLine(line, miltiple && file) + '\n'
+      this.feed.append(data)
+    })
+    tail.watch()
+
+    this.fileTails[file] = tail
+  }
+
+  /**
+   * @private
+   */
+  async unwatchFile (file) {
+    const watcher = this.fileTails[file]
+
+    if (watcher) {
+      watcher.unwatch()
+      delete this.fileTails[file]
+    }
+  }
+
   async start () {
     const files = await resolvePaths(this.pathlike)
     if (!files.length) throw new Error('ERR_FILE_NOT_FOUND')
 
     await super.start()
 
-    await Promise.all(files.map(async (file) => {
-      if (this.republish) {
-        const encoding = this.feedOpts.valueEncoding
-        const rstream = fs.createReadStream(file, { encoding })
-
-        const rl = readline.createInterface({
-          input: rstream,
-          crlfDelay: Infinity
-        })
-
-        for await (const line of rl) {
-          await new Promise((resolve, reject) => {
-            const data = HyperCoreFileLogger.formatLine(line, files.length > 1 && file) + '\n'
-            this.feed.append(data, (err) => err ? reject(err) : resolve())
-          })
-        }
-      }
-
-      const tail = new Tail(file)
-      tail.on('line', (line) => {
-        const data = HyperCoreFileLogger.formatLine(line, files.length > 1 && file) + '\n'
-        this.feed.append(data)
-      })
-      tail.watch()
-
-      this.fileTails[file] = tail
-    }))
+    await Promise.all(files.map((file) => this.watchFile(file, files.length > 1)))
 
     debug('feed started listening for changes on %s', files.join(', '))
   }
 
   async stop () {
-    _.values(this.fileTails).forEach(tail => {
-      tail.unwatch()
-    })
+    _.keys(this.fileTails).forEach(file => this.unwatchFile(file))
     await super.stop()
   }
 }
