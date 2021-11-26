@@ -12,9 +12,19 @@ const { HyperCoreFileLogger, HyperCoreLogReader } = require('../')
 
 module.exports = () => {
   describe('file logger tests', () => {
+    const tmpDir = path.join(__dirname, 'tmp')
+
+    beforeEach(async () => {
+      await fs.mkdir(tmpDir, { recursive: true })
+    })
+
+    afterEach(async () => {
+      await fs.rm(tmpDir, { recursive: true })
+    })
+
     it('file logger should push data from file to the reader', async () => {
       const databuff = []
-      const filename = path.join(__dirname, 'temp.log')
+      const filename = path.join(tmpDir, 'temp.log')
       const push = () => fs.writeFile(
         filename, 'test\n', { encoding: 'utf-8', flag: 'a' }
       )
@@ -49,7 +59,7 @@ module.exports = () => {
 
     it('file logger should republish entire file when specified', async () => {
       const databuff = []
-      const filename = path.join(__dirname, 'temp.log')
+      const filename = path.join(tmpDir, 'temp.log')
       const fcontent = 'test1\ntest2\ntest3\ntest4'
       fs.writeFile(filename, fcontent, { encoding: 'utf-8', flag: 'w' })
 
@@ -78,7 +88,7 @@ module.exports = () => {
 
     it('file logger should push data from dir to the reader', async () => {
       const databuff = []
-      const dir = __dirname
+      const dir = tmpDir
       const files = [path.join(dir, 'temp1.log'), path.join(dir, 'temp2.log')]
       const push = (i) => fs.writeFile(
         files[i], 'test\n', { encoding: 'utf-8', flag: 'a' }
@@ -115,7 +125,7 @@ module.exports = () => {
 
     it('file logger should push data from glob to the reader', async () => {
       const databuff = []
-      const dir = __dirname
+      const dir = tmpDir
       const files = [path.join(dir, 'temp1.log'), path.join(dir, 'temp2.log')]
       const push = (i) => fs.writeFile(
         files[i], 'test\n', { encoding: 'utf-8', flag: 'a' }
@@ -123,7 +133,7 @@ module.exports = () => {
 
       await push(0) // create file if not exists
       await push(1) // create file if not exists
-      const server = new HyperCoreFileLogger('test/*.log', false, () => ram())
+      const server = new HyperCoreFileLogger(path.join(tmpDir, '*.log'), false, () => ram())
 
       await server.start()
       await push(0)
