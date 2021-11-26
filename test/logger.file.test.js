@@ -160,6 +160,38 @@ module.exports = () => {
       expect(databuff.length).to.be.equal(2)
     }).timeout(1200000)
 
+    it('watches new files', async () => {
+      const databuff = []
+      const push = (file) => fs.writeFile(
+        path.join(tmpDir, file), 'test\n', { encoding: 'utf-8', flag: 'a' }
+      )
+      await push('temp1.log') // create file
+
+      const server = new HyperCoreFileLogger(path.join(tmpDir, '*.log'), true, () => ram())
+
+      await server.start()
+
+      const client = new HyperCoreLogReader(
+        () => ram(), server.feedKey, null, null, { snapshot: false, tail: true }
+      )
+      client.on('data', (data) => { databuff.push(data.toString()) })
+
+      await sleep(500)
+      await client.start()
+      await sleep(3000)
+
+      await push('temp1.log')
+      await push('temp2.log') // create file
+      await sleep(500)
+
+      await Promise.all([
+        server.stop(),
+        client.stop()
+      ])
+
+      expect(databuff.length).to.be.equal(2)
+    }).timeout(120000)
+
     it('parse simple line', () => {
       const line = 'some data'
       const { path, content } = HyperCoreFileLogger.parseLine(line)
