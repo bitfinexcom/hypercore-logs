@@ -98,7 +98,7 @@ const {
   HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
 } = require('../')
 const {
-  createDir, createFileDir, fullPath, isHexStr, isDir
+  createDir, createFileDir, fullPath, isHexStr, isDir, isDirPath
 } = require('../src/helper')
 
 const cmds = ['read', 'write']
@@ -133,8 +133,9 @@ const writeLine = async (path, line) => {
   return fs.promises.writeFile(path, data, options)
 }
 
-const prepareOutputDestination = async (path) => {
-  const isDirectory = await isDir(path)
+const prepareOutputDestination = async (output) => {
+  const path = fullPath(output)
+  const isDirectory = await isDir(path) || isDirPath(output)
   const dirCreated = isDirectory ? await createDir(path) : await createFileDir(path)
 
   if (!dirCreated) {
@@ -161,8 +162,7 @@ const main = async () => {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
     const logConsole = argv.output ? argv.console : true
-    const output = argv.output ? fullPath(argv.output) : null
-    const { path: destination, file } = output ? await prepareOutputDestination(output) : {}
+    const { path: destination, file } = argv.output ? await prepareOutputDestination(argv.output) : {}
 
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start

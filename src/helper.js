@@ -126,6 +126,13 @@ const isHexStr = (str) => (typeof str === 'string' || str instanceof String) &&
 
 /**
  * @param {string} str
+ * @returns {boolean}
+ */
+const isDirPath = (str) => {
+  return ['.', '..'].includes(path.basename(str)) || str.endsWith(path.sep)
+}
+/**
+ * @param {string} str
  */
 const escapeRegex = (str) => {
   return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
@@ -143,5 +150,6 @@ module.exports = {
   createDir,
   createFileDir,
   isHexStr,
+  isDirPath,
   escapeRegex
 }
