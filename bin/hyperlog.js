@@ -172,11 +172,13 @@ const main = async () => {
     const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
 
     client.on('data', async (data) => {
-      const { path, content } = HyperCoreFileLogger.parseLine(data.toString().trimRight())
+      const line = data.toString().trimRight()
 
-      if (logConsole) console.log(content)
+      if (logConsole) console.log(line)
 
       if (destination) {
+        const { path, content } = HyperCoreFileLogger.parseLine(line)
+
         if (path) {
           const outpath = join(destination, path)
 
