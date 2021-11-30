@@ -5,6 +5,7 @@
 process.env.DEBUG = 'hcore-logger'
 
 const fs = require('fs')
+const { join, dirname, basename } = require('path')
 const ram = require('random-access-memory')
 const pkg = require('../package.json')
 const yargs = require('yargs')
@@ -21,6 +22,18 @@ const yargs = require('yargs')
         type: 'string',
         alias: 'd',
         description: 'feed data directory, if ommited RAM memory will be used'
+      })
+      .option('output', {
+        type: 'string',
+        alias: 'o',
+        description: 'log output directory or file, if not provided output ' +
+          'will be logged to console.'
+      })
+      .option('console', {
+        type: 'boolean',
+        alias: 'c',
+        description: 'log output to console, if output provided and console ' +
+          'ommited then output would be logged only in file!'
       })
       .option('tail', {
         type: 'boolean',
@@ -84,7 +97,9 @@ const yargs = require('yargs')
 const {
   HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
 } = require('../')
-const { isHexStr, fullPath } = require('../src/helper')
+const {
+  createDir, createFileDir, fullPath, isHexStr, isDir, isDirPath
+} = require('../src/helper')
 
 const cmds = ['read', 'write']
 
@@ -111,58 +126,98 @@ const parseStorage = (dir) => {
   return fullPath(dir)
 }
 
-const main = async () => {
-  try {
-    const argv = yargs.argv
-    const [cmd] = argv._
+const writeLine = async (path, line) => {
+  const options = { flag: 'a' }
+  const data = line + '\n'
 
-    if (!cmds.includes(cmd)) throw new Error('ERR_CMD_NOT_SUPPORTED')
+  return fs.promises.writeFile(path, data, options)
+}
 
-    let key = parseKey(argv.key, 64, 'key')
-    let secretKey = parseKey(argv['secret-key'], 128, 'secret-key')
-    const storage = parseStorage(argv.datadir)
+const prepareOutputDestination = async (output) => {
+  const path = fullPath(output)
+  const isDirectory = await isDir(path) || isDirPath(output)
+  const dirCreated = isDirectory ? await createDir(path) : await createFileDir(path)
 
-    if (cmd === 'read') {
-      if (!key) throw new Error('ERR_KEY_REQUIRED')
+  if (!dirCreated) {
+    throw new Error('ERR_MAKE_OUTPUT_DIR_FAILED')
+  }
 
-      let streamOpts = {}
-      if (typeof argv.start === 'number') streamOpts.start = argv.start
-      if (typeof argv.end === 'number') streamOpts.end = argv.end
-      if (argv.tail === true) streamOpts = { snapshot: false, tail: true }
-
-      const client = new HyperCoreLogReader(
-        storage, key, null, null, streamOpts
-      )
-      client.on('data', (data) => console.log(data.toString().trimRight()))
-
-      await client.start()
-    }
-
-    if (cmd === 'write') {
-      if (argv.port && argv.file) throw new Error('ERR_TRANSPORT_AMBIGUOUS')
-
-      // clear both in case if one is invalid
-      if (!key || !secretKey) {
-        key = null
-        secretKey = null
-      }
-
-      let feed = null
-      if (argv.port) {
-        feed = new HyperCoreUdpLogger(argv.port, storage, key, { secretKey })
-      } else if (argv.file) {
-        if (!argv.file) throw new Error('ERR_FILE_MISSING')
-        feed = new HyperCoreFileLogger(argv.file, argv.republish === true,
-          storage, key, { secretKey })
-      } else {
-        throw new Error('ERR_TRANSPORT_MISSING')
-      }
-
-      await feed.start()
-    }
-  } catch (err) {
-    console.error(err)
+  return {
+    demultiplex: isDirectory,
+    path: isDirectory ? path : dirname(path),
+    file: isDirectory ? `hyperlog-${Date.now()}.log` : basename(path)
   }
 }
 
-main()
+const main = async () => {
+  const argv = yargs.argv
+  const [cmd] = argv._
+
+  if (!cmds.includes(cmd)) throw new Error('ERR_CMD_NOT_SUPPORTED')
+
+  let key = parseKey(argv.key, 64, 'key')
+  let secretKey = parseKey(argv['secret-key'], 128, 'secret-key')
+  const storage = parseStorage(argv.datadir)
+
+  if (cmd === 'read') {
+    if (!key) throw new Error('ERR_KEY_REQUIRED')
+
+    const logConsole = argv.output ? argv.console : true
+    const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
+
+    let streamOpts = {}
+    if (typeof argv.start === 'number') streamOpts.start = argv.start
+    if (typeof argv.end === 'number') streamOpts.end = argv.end
+    if (argv.tail === true) streamOpts = { snapshot: false, tail: true }
+
+    const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
+
+    client.on('data', async (data) => {
+      const line = data.toString().trimRight()
+
+      if (logConsole) console.log(line)
+
+      if (destination) {
+        const { path, content } = HyperCoreFileLogger.parseLine(line)
+
+        if (path && demultiplex) {
+          const outpath = join(destination, path)
+
+          await createFileDir(outpath)
+          await writeLine(outpath, content)
+        } else {
+          const outpath = join(destination, file)
+
+          await writeLine(outpath, line)
+        }
+      }
+    })
+
+    await client.start()
+  }
+
+  if (cmd === 'write') {
+    if (argv.port && argv.file) throw new Error('ERR_TRANSPORT_AMBIGUOUS')
+
+    // clear both in case if one is invalid
+    if (!key || !secretKey) {
+      key = null
+      secretKey = null
+    }
+
+    let feed = null
+    if (argv.port) {
+      feed = new HyperCoreUdpLogger(argv.port, storage, key, { secretKey })
+    } else if (argv.file) {
+      if (!argv.file) throw new Error('ERR_FILE_MISSING')
+      feed = new HyperCoreFileLogger(argv.file, argv.republish === true,
+        storage, key, { secretKey })
+    } else {
+      throw new Error('ERR_TRANSPORT_MISSING')
+    }
+
+    await feed.start()
+  }
+}
+
+main().catch(console.error)

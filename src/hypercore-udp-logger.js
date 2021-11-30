@@ -55,7 +55,8 @@ class HyperCoreUdpLogger extends HyperCoreLogger {
 
     this.udp = dgram.createSocket('udp4')
     this.udp.on('message', (raw, rinfo) => {
-      const data = this.feedOpts.valueEncoding === 'binary' ? raw
+      const data = this.feedOpts.valueEncoding === 'binary'
+        ? raw
         : raw.toString('utf-8') + '\n'
       this.feed.append(data)
     })

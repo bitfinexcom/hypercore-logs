@@ -97,11 +97,46 @@ const resolvePaths = async (pathlike) => {
 }
 
 /**
+ * Creates a dir if not exists, if exists checks if it's dir or file
+ * @param {string} pathlike
+ */
+const createDir = async (pathlike) => {
+  const exists = await fExists(pathlike)
+  if (exists) return await isDir(pathlike)
+
+  await fs.promises.mkdir(pathlike, { recursive: true })
+  return true
+}
+
+/**
+ * Creates a dir if not exists, if exists checks if it's dir or file
+ * @param {string} pathlike
+ */
+const createFileDir = (pathlike) => {
+  const dirname = path.dirname(pathlike)
+  return createDir(dirname)
+}
+
+/**
  * @param {string} str
  * @returns {boolean}
  */
 const isHexStr = (str) => (typeof str === 'string' || str instanceof String) &&
   /^[0-9A-Fa-f]+$/.test(str)
+
+/**
+ * @param {string} str
+ * @returns {boolean}
+ */
+const isDirPath = (str) => {
+  return ['.', '..'].includes(path.basename(str)) || str.endsWith(path.sep)
+}
+/**
+ * @param {string} str
+ */
+const escapeRegex = (str) => {
+  return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
+}
 
 module.exports = {
   fullPath,
@@ -112,5 +147,9 @@ module.exports = {
   globPath,
   resolveUsrDir,
   resolvePaths,
-  isHexStr
+  createDir,
+  createFileDir,
+  isHexStr,
+  isDirPath,
+  escapeRegex
 }
