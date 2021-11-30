@@ -143,6 +143,7 @@ const prepareOutputDestination = async (output) => {
   }
 
   return {
+    demultiplex: isDirectory,
     path: isDirectory ? path : dirname(path),
     file: isDirectory ? `hyperlog-${Date.now()}.log` : basename(path)
   }
@@ -162,7 +163,7 @@ const main = async () => {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
     const logConsole = argv.output ? argv.console : true
-    const { path: destination, file } = argv.output ? await prepareOutputDestination(argv.output) : {}
+    const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
 
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
@@ -179,7 +180,7 @@ const main = async () => {
       if (destination) {
         const { path, content } = HyperCoreFileLogger.parseLine(line)
 
-        if (path) {
+        if (path && demultiplex) {
           const outpath = join(destination, path)
 
           await createFileDir(outpath)
@@ -187,7 +188,7 @@ const main = async () => {
         } else {
           const outpath = join(destination, file)
 
-          await writeLine(outpath, content)
+          await writeLine(outpath, line)
         }
       }
     })
