@@ -74,12 +74,6 @@ Options:
   --datadir, -d  feed data directory, if ommited RAM memory will be used[string]
   --output, -o   log output directory or file, if not provided output will be
                  logged to console.                                     [string]
-  --input-dir    when multiple files are logged input-dir is used to demultiplex
-                 file logs so each logged file has it's own  output file. In
-                 case if it's used together with output option then the output
-                 files would be the part without input-dir. In case if it's used
-                 together with console option then it would remove input-dir
-                 from console logged file prefixes                      [string]
   --console, -c  log output to console, if output provided and console ommited
                  then output would be logged only in file!             [boolean]
   --tail         tail the log file                                     [boolean]

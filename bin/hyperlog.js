@@ -5,7 +5,7 @@
 process.env.DEBUG = 'hcore-logger'
 
 const fs = require('fs')
-const { join } = require('path')
+const { join, dirname, basename } = require('path')
 const ram = require('random-access-memory')
 const pkg = require('../package.json')
 const yargs = require('yargs')
@@ -28,15 +28,6 @@ const yargs = require('yargs')
         alias: 'o',
         description: 'log output directory or file, if not provided output ' +
           'will be logged to console.'
-      })
-      .option('input-dir', {
-        type: 'string',
-        description: 'when multiple files are logged input-dir is used to ' +
-          'demultiplex file logs so each logged file has it\'s own  ' +
-          'output file. In case if it\'s used together with output option ' +
-          'then the output files would be the part without input-dir. ' +
-          'In case if it\'s used together with console option then it would ' +
-          'remove input-dir from console logged file prefixes'
       })
       .option('console', {
         type: 'boolean',
@@ -107,7 +98,7 @@ const {
   HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
 } = require('../')
 const {
-  createDir, createFileDir, escapeRegex, fullPath, isHexStr, isDir
+  createDir, createFileDir, fullPath, isHexStr, isDir, isDirPath
 } = require('../src/helper')
 
 const cmds = ['read', 'write']
@@ -142,17 +133,19 @@ const writeLine = async (path, line) => {
   return fs.promises.writeFile(path, data, options)
 }
 
-const prepareOutputDestination = async (path, multifile = false) => {
-  const dirCreated = multifile ? await createDir(path) : await createFileDir(path)
+const prepareOutputDestination = async (output) => {
+  const path = fullPath(output)
+  const isDirectory = await isDir(path) || isDirPath(output)
+  const dirCreated = isDirectory ? await createDir(path) : await createFileDir(path)
 
   if (!dirCreated) {
     throw new Error('ERR_MAKE_OUTPUT_DIR_FAILED')
   }
 
-  if (multifile) {
-    return path
-  } else {
-    return await isDir(path) ? join(path, `hyperlog-${Date.now()}.log`) : path
+  return {
+    demultiplex: isDirectory,
+    path: isDirectory ? path : dirname(path),
+    file: isDirectory ? `hyperlog-${Date.now()}.log` : basename(path)
   }
 }
 
@@ -170,12 +163,7 @@ const main = async () => {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
     const logConsole = argv.output ? argv.console : true
-    const output = argv.output ? fullPath(argv.output) : null
-    const inDir = argv['input-dir']
-      ? new RegExp('^' + escapeRegex(argv['input-dir']))
-      : null
-    const multiFileLog = !!inDir
-    const destination = output && await prepareOutputDestination(output, multiFileLog)
+    const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
 
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
@@ -185,20 +173,22 @@ const main = async () => {
     const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
 
     client.on('data', async (data) => {
-      let line = data.toString().trimRight()
-      if (multiFileLog) line = line.replace(inDir, '')
+      const line = data.toString().trimRight()
 
       if (logConsole) console.log(line)
 
       if (destination) {
-        if (multiFileLog) {
-          const { path, content } = HyperCoreFileLogger.parseLine(line)
+        const { path, content } = HyperCoreFileLogger.parseLine(line)
+
+        if (path && demultiplex) {
           const outpath = join(destination, path)
 
           await createFileDir(outpath)
           await writeLine(outpath, content)
         } else {
-          await writeLine(destination, line)
+          const outpath = join(destination, file)
+
+          await writeLine(outpath, line)
         }
       }
     })

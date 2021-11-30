@@ -72,9 +72,11 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     const delimiter = HyperCoreFileLogger.getFileDelimiter()
     const [path, ...content] = line.split(delimiter)
 
+    const hasPath = content.length
+
     return {
-      path,
-      content: content.join(delimiter)
+      path: hasPath ? path : null,
+      content: hasPath ? content.join(delimiter) : line
     }
   }
 
