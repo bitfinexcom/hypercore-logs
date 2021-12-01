@@ -92,7 +92,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
   /**
    * @private
    */
-  async watchFile (file, miltiple = false) {
+  async watchFile (file, multiple = false) {
     if (this.republish) {
       const encoding = this.feedOpts.valueEncoding
       const rstream = fs.createReadStream(file, { encoding })
@@ -104,7 +104,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
       for await (const line of rl) {
         await new Promise((resolve, reject) => {
-          const data = HyperCoreFileLogger.formatLine(line, miltiple && file) + '\n'
+          const data = HyperCoreFileLogger.formatLine(line, multiple && file) + '\n'
           this.feed.append(data, (err) => err ? reject(err) : resolve())
         })
       }
@@ -112,7 +112,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
     const tail = new Tail(file)
     tail.on('line', (line) => {
-      const data = HyperCoreFileLogger.formatLine(line, miltiple && file) + '\n'
+      const data = HyperCoreFileLogger.formatLine(line, multiple && file) + '\n'
       this.feed.append(data)
     })
     tail.watch()
