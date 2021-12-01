@@ -3,9 +3,9 @@
 const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const fs = require('fs')
-const isGlob = require('is-glob')
 const chokidar = require('chokidar')
 const readline = require('readline')
+const { isGlob } = require('./helper')
 const HyperCoreLogger = require('./hypercore-logger')
 const Tail = require('tail').Tail
 
