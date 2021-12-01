@@ -29,9 +29,9 @@ const yargs = require('yargs')
         description: 'log output directory or file, if not provided output ' +
           'will be logged to console.'
       })
-      .option('prefix', {
+      .option('remote-prefix', {
         type: 'string',
-        alias: 'p',
+        alias: 'rp',
         description: 'path prefix to be omitted'
       })
       .option('console', {
@@ -168,7 +168,7 @@ const main = async () => {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
     const logConsole = argv.output ? argv.console : true
-    const prefixRegExp = argv.prefix ? new RegExp(`^${normalize(argv.prefix)}`) : null
+    const prefixRegExp = argv['remote-prefix'] ? new RegExp(`^${normalize(argv['remote-prefix'])}`) : null
     const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
 
     let streamOpts = {}
