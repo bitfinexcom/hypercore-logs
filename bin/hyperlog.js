@@ -179,7 +179,8 @@ const main = async () => {
     const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
 
     client.on('data', async (data) => {
-      const line = data.toString().trimRight().replace(prefixRegExp, '')
+      const originLine = data.toString().trimRight()
+      const line = prefixRegExp ? originLine.replace(prefixRegExp, '') : originLine
 
       if (logConsole) console.log(line)
 
