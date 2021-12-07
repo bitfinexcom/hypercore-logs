@@ -5,7 +5,7 @@
 process.env.DEBUG = 'hcore-logger'
 
 const fs = require('fs')
-const { join, dirname, basename } = require('path')
+const { join, dirname, basename, normalize } = require('path')
 const ram = require('random-access-memory')
 const pkg = require('../package.json')
 const yargs = require('yargs')
@@ -28,6 +28,11 @@ const yargs = require('yargs')
         alias: 'o',
         description: 'log output directory or file, if not provided output ' +
           'will be logged to console.'
+      })
+      .option('remote-prefix', {
+        type: 'string',
+        alias: 'rp',
+        description: 'path prefix to be omitted'
       })
       .option('console', {
         type: 'boolean',
@@ -163,6 +168,7 @@ const main = async () => {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
     const logConsole = argv.output ? argv.console : true
+    const prefixRegExp = argv['remote-prefix'] ? new RegExp(`^${normalize(argv['remote-prefix'])}`) : null
     const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
 
     let streamOpts = {}
@@ -173,7 +179,8 @@ const main = async () => {
     const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
 
     client.on('data', async (data) => {
-      const line = data.toString().trimRight()
+      const originLine = data.toString().trimRight()
+      const line = prefixRegExp ? originLine.replace(prefixRegExp, '') : originLine
 
       if (logConsole) console.log(line)
 

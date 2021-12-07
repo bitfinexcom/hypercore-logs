@@ -76,6 +76,7 @@ Options:
   --datadir, -d  feed data directory, if ommited RAM memory will be used[string]
   --output, -o   log output directory or file, if not provided output will be
                  logged to console.                                     [string]
+  --remote-prefix, -rp   path prefix to be omitted                              [string]
   --console, -c  log output to console, if output provided and console ommited
                  then output would be logged only in file!             [boolean]
   --tail         tail the log file                                     [boolean]
