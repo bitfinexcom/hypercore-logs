@@ -91,9 +91,11 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
   /**
    * @private
+   * @param {String} file
+   * @param {{ multiple: Boolean, republish: Boolean }} options
    */
-  async watchFile (file, multiple = false) {
-    if (this.republish) {
+  async watchFile (file, options) {
+    if (options.republish) {
       const encoding = this.feedOpts.valueEncoding
       const rstream = fs.createReadStream(file, { encoding })
 
@@ -104,7 +106,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
       for await (const line of rl) {
         await new Promise((resolve, reject) => {
-          const data = HyperCoreFileLogger.formatLine(line, multiple && file) + '\n'
+          const data = HyperCoreFileLogger.formatLine(line, options.multiple && file) + '\n'
           this.feed.append(data, (err) => err ? reject(err) : resolve())
         })
       }
@@ -112,7 +114,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
     const tail = new Tail(file)
     tail.on('line', (line) => {
-      const data = HyperCoreFileLogger.formatLine(line, multiple && file) + '\n'
+      const data = HyperCoreFileLogger.formatLine(line, options.multiple && file) + '\n'
       this.feed.append(data)
     })
     tail.watch()
@@ -136,7 +138,10 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     await super.start()
     this.watcher = chokidar.watch(this.pathlike)
 
-    this.watcher.on('add', file => this.watchFile(file, isGlob(this.pathlike)))
+    this.watcher.on('add', file => this.watchFile(file, {
+      multiple: isGlob(this.pathlike),
+      republish: this.republish
+    }))
     this.watcher.on('unlink', file => this.unwatchFile(file))
 
     debug('feed started listening for changes on %s', this.pathlike)
