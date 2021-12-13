@@ -138,9 +138,12 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     await super.start()
     this.watcher = chokidar.watch(this.pathlike)
 
+    let republish = this.republish
+
+    this.watcher.on('ready', () => { republish = true })
     this.watcher.on('add', file => this.watchFile(file, {
       multiple: isGlob(this.pathlike),
-      republish: this.republish
+      republish
     }))
     this.watcher.on('unlink', file => this.unwatchFile(file))
 
