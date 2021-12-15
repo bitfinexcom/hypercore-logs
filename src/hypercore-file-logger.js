@@ -65,6 +65,8 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     this.fileTails = {}
     /** @type {chokidar.FSWatcher | null} */
     this.watcher = null
+    /** @type {boolean} */
+    this.isReady = false
   }
 
   static getFileDelimiter () {
@@ -138,12 +140,10 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     await super.start()
     this.watcher = chokidar.watch(this.pathlike)
 
-    let republish = this.republish
-
-    this.watcher.on('ready', () => { republish = true })
+    this.watcher.on('ready', () => { this.isReady = true })
     this.watcher.on('add', file => this.watchFile(file, {
       multiple: isGlob(this.pathlike),
-      republish
+      republish: this.republish || this.isReady
     }))
     this.watcher.on('unlink', file => this.unwatchFile(file))
 
@@ -153,6 +153,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
   async stop () {
     _.keys(this.fileTails).forEach(file => this.unwatchFile(file))
     if (this.watcher) this.watcher.close()
+    this.isReady = false
     await super.stop()
   }
 }
