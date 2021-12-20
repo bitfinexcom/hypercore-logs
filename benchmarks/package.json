@@ -1,0 +1,16 @@
+{
+  "name": "hypercore-logs-benchmark",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "clinic doctor --on-port 'autocannon localhost:$PORT' -- node ./suits/$ID.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "autocannon": "^7.5.0",
+    "clinic": "^10.0.0",
+    "hypercore-logs": "github:bitfinexcom/hypercore-logs#master"
+  }
+}
