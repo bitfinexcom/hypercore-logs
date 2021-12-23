@@ -22,12 +22,9 @@ const NUMBER_OF_FILES = 100
 
 if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir)
 
-const startPromise = Promise.all([
-  Promise.all(new Array(NUMBER_OF_FILES).map((_, i) => {
-    return fs.promises.writeFile(getPathToFile(i), '')
-  })),
-  server.start()
-])
+const startPromise = Promise.all(new Array(NUMBER_OF_FILES).fill(null).map((_, i) => {
+  return fs.promises.writeFile(getPathToFile(i), '')
+})).then(() => server.start())
 
 let index = 0
 
