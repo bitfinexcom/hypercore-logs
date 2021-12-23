@@ -9,6 +9,8 @@ You can install it as a local dependency (`npm i ..`), or install directly from 
 
 where `<test id>` is any of the file names placed in the `tests` directory
 
+The test results will be available in the `.clinic` directory and terminal (number of requests)
+
 ### References
 
 - [Clinic.js Doctor](https://clinicjs.org/doctor/)
