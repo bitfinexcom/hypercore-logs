@@ -8,6 +8,7 @@ const fs = require('fs')
 const { join, dirname, basename, normalize } = require('path')
 const ram = require('random-access-memory')
 const pkg = require('../package.json')
+const micromatch = require('micromatch')
 const yargs = require('yargs')
   .command(
     'read',
@@ -53,6 +54,14 @@ const yargs = require('yargs')
         type: 'number',
         desc: 'feed read end, ignored in case if tail is specified, ' +
           'if negative it\'s considered from feed end'
+      })
+      .option('include', {
+        type: 'string',
+        desc: ''
+      })
+      .option('exclude', {
+        type: 'string',
+        desc: ''
       })
   )
   .command(
@@ -170,6 +179,8 @@ const main = async () => {
     const logConsole = argv.output ? argv.console : true
     const prefixRegExp = argv['remote-prefix'] ? new RegExp(`^${normalize(argv['remote-prefix'])}`) : null
     const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
+    const include = argv.include ? argv.include : null
+    const exclude = argv.exclude ? argv.exclude : null
 
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
@@ -181,6 +192,9 @@ const main = async () => {
     client.on('data', async (data) => {
       const originLine = data.toString().trimRight()
       const line = prefixRegExp ? originLine.replace(prefixRegExp, '') : originLine
+
+      if (include && !micromatch.isMatch(line, include)) return
+      if (exclude && micromatch.isMatch(line, exclude)) return
 
       if (logConsole) console.log(line)
 
