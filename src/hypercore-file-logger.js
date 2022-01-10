@@ -138,7 +138,10 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
   async start () {
     await super.start()
-    this.watcher = chokidar.watch(this.pathlike)
+    this.watcher = chokidar.watch(this.pathlike, {
+      usePolling: true,
+      interval: 300
+    })
 
     this.watcher.on('ready', () => { this.isReady = true })
     this.watcher.on('add', file => this.watchFile(file, {
