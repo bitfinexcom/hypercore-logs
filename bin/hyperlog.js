@@ -56,11 +56,11 @@ const yargs = require('yargs')
       })
       .option('include', {
         type: 'string',
-        desc: ''
+        desc: 'filter logs by Regular expression'
       })
       .option('exclude', {
         type: 'string',
-        desc: ''
+        desc: 'exclude logs by Regular expression, can be used along with "include" option'
       })
   )
   .command(
