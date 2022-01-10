@@ -54,6 +54,14 @@ const yargs = require('yargs')
         desc: 'feed read end, ignored in case if tail is specified, ' +
           'if negative it\'s considered from feed end'
       })
+      .option('include', {
+        type: 'string',
+        desc: 'filter logs by Regular expression'
+      })
+      .option('exclude', {
+        type: 'string',
+        desc: 'exclude logs by Regular expression, can be used along with "include" option'
+      })
   )
   .command(
     'write',
@@ -170,6 +178,8 @@ const main = async () => {
     const logConsole = argv.output ? argv.console : true
     const prefixRegExp = argv['remote-prefix'] ? new RegExp(`^${normalize(argv['remote-prefix'])}`) : null
     const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
+    const include = argv.include ? new RegExp(argv.include) : null
+    const exclude = argv.exclude ? new RegExp(argv.exclude) : null
 
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
@@ -181,6 +191,9 @@ const main = async () => {
     client.on('data', async (data) => {
       const originLine = data.toString().trimRight()
       const line = prefixRegExp ? originLine.replace(prefixRegExp, '') : originLine
+
+      if (include && !line.match(include)) return
+      if (exclude && line.match(exclude)) return
 
       if (logConsole) console.log(line)
 
