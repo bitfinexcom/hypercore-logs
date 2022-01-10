@@ -84,6 +84,9 @@ Options:
                  negative it's considered from feed end                 [number]
   --end          feed read end, ignored in case if tail is specified, if
                  negative it's considered from feed end                 [number]
+  --include      filter logs by Regular expression                      [string]
+  --exclude      exclude logs by Regular expression, can be used along
+                 with "include" option                                  [string]
 ```
 
 ## Examples
@@ -146,6 +149,12 @@ hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30f
 
 ```console
 hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30fef8e --output test3/ --input-dir /home/dev/logs/
+```
+
+### Example - read and filter logs that contains "[client]" at the start and doesn't contain "fatal" word
+
+```console
+hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30fef8e --console --include "\[server\]" --exclude "warn"
 ```
 
 ### Example - code
