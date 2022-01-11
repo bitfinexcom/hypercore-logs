@@ -10,8 +10,11 @@ const secretKey = 'f66a2bbec992b9d4c3dfadc67b8aa69782334ae7753fce182' +
   '016e06c80b6d0dd0db350f414a93274e5613930b' +
   '79c7226f21270cfc1435b96350422a0abf63dc2'
 
-const tailfile = path.join(cwd, 'logs', 'file.log')
+const logsFolder = path.join(cwd, 'logs')
+const tailfile = path.join(logsFolder, 'file.log')
 const server = new HyperCoreFileLogger(tailfile, true, feedDir, key, { secretKey })
+
+if (!fs.existsSync(logsFolder)) fs.mkdirSync(logsFolder)
 
 const startPromise = Promise.all([
   fs.promises.writeFile(tailfile, ''),
