@@ -84,6 +84,10 @@ Options:
                  negative it's considered from feed end                 [number]
   --end          feed read end, ignored in case if tail is specified, if
                  negative it's considered from feed end                 [number]
+  --start-date   feed read start by date, ignored in case if start
+                 is specified                                           [string]
+  --end-date     feed read end by date, ignored in case if end
+                 is specified                                           [string]
   --include      filter logs by Regular expression                      [string]
   --exclude      exclude logs by Regular expression, can be used along
                  with "include" option                                  [string]
