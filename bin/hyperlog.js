@@ -54,6 +54,14 @@ const yargs = require('yargs')
         desc: 'feed read end, ignored in case if tail is specified, ' +
           'if negative it\'s considered from feed end'
       })
+      .option('start-date', {
+        type: 'string',
+        desc: 'feed read start by date, ignored in case if start is specified'
+      })
+      .option('end-date', {
+        type: 'string',
+        desc: 'feed read end by date, ignored in case if end is specified'
+      })
       .option('include', {
         type: 'string',
         desc: 'filter logs by Regular expression'
@@ -184,6 +192,8 @@ const main = async () => {
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
     if (typeof argv.end === 'number') streamOpts.end = argv.end
+    if (argv['start-date']) streamOpts.startDate = new Date(argv['start-date'])
+    if (argv['end-date']) streamOpts.endDate = new Date(argv['end-date'])
     if (argv.tail === true) streamOpts = { snapshot: false, tail: true }
 
     const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
