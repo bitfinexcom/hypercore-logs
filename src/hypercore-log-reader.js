@@ -52,8 +52,8 @@ class HyperCoreLogReader extends EventEmitter {
    * @param {Object} [streamOpts]
    * @param {number} [streamOpts.start]
    * @param {number} [streamOpts.end]
-   * @param {number} [streamOpts.dateStart]
-   * @param {number} [streamOpts.dateEnd]
+   * @param {number} [streamOpts.startDate]
+   * @param {number} [streamOpts.endDate]
    * @param {boolean} [streamOpts.snapshot]
    * @param {boolean} [streamOpts.tail]
    * @param {number} [streamOpts.timeout]
@@ -119,15 +119,15 @@ class HyperCoreLogReader extends EventEmitter {
         this.feedKey = this.feed.key.toString('hex')
         const flen = this.feed.length
 
-        if (this.streamOpts.dateStart) {
-          this.streamOpts.start = await this.findIndexByDate(this.streamOpts.dateStart)
+        if (this.streamOpts.startDate) {
+          this.streamOpts.start = await this.findIndexByDate(this.streamOpts.startDate)
         } else if (this.streamOpts.start && this.streamOpts.start < 0) {
           this.streamOpts.start = flen + this.streamOpts.start
           if (this.streamOpts.start < 0) this.streamOpts.start = 0
         }
 
-        if (this.streamOpts.dateEnd) {
-          this.streamOpts.end = await this.findIndexByDate(this.streamOpts.dateEnd)
+        if (this.streamOpts.endDate) {
+          this.streamOpts.end = await this.findIndexByDate(this.streamOpts.endDate)
         } else if (this.streamOpts.end && this.streamOpts.end < 0) {
           this.streamOpts.end = flen + this.streamOpts.end
           if (this.streamOpts.end < 0) this.streamOpts.end = 0
