@@ -6,6 +6,7 @@ const hypercore = require('hypercore')
 const Replicator = require('@hyperswarm/replicator')
 const bisect = require('hypercore-bisect')
 const { EventEmitter } = require('events')
+const { parseLogDate } = require('./helper')
 
 class HyperCoreLogReader extends EventEmitter {
   /**
@@ -91,11 +92,7 @@ class HyperCoreLogReader extends EventEmitter {
   async findIndexByDate (date) {
     const opts = { returnClosest: true }
     const comparator = (item, cb) => {
-      const logDate = Date.parse(item.split(' ')[0])
-
-      if (Number.isNaN(logDate)) throw new Error('the logs dont have a timestamp')
-
-      return cb(null, (date.getTime() > logDate ? -1 : 1))
+      return cb(null, (date.getTime() > parseLogDate(item) ? -1 : 1))
     }
 
     return new Promise((resolve, reject) => {
