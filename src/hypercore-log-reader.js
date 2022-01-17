@@ -119,18 +119,18 @@ class HyperCoreLogReader extends EventEmitter {
         this.feedKey = this.feed.key.toString('hex')
         const flen = this.feed.length
 
-        if (this.streamOpts.startDate) {
-          this.streamOpts.start = await this.findIndexByDate(this.streamOpts.startDate)
-        } else if (this.streamOpts.start && this.streamOpts.start < 0) {
+        if (this.streamOpts.start && this.streamOpts.start < 0) {
           this.streamOpts.start = flen + this.streamOpts.start
           if (this.streamOpts.start < 0) this.streamOpts.start = 0
+        } else if (this.streamOpts.startDate) {
+          this.streamOpts.start = await this.findIndexByDate(this.streamOpts.startDate)
         }
 
-        if (this.streamOpts.endDate) {
-          this.streamOpts.end = await this.findIndexByDate(this.streamOpts.endDate)
-        } else if (this.streamOpts.end && this.streamOpts.end < 0) {
+        if (this.streamOpts.end && this.streamOpts.end < 0) {
           this.streamOpts.end = flen + this.streamOpts.end
           if (this.streamOpts.end < 0) this.streamOpts.end = 0
+        } else if (this.streamOpts.endDate) {
+          this.streamOpts.end = await this.findIndexByDate(this.streamOpts.endDate)
         }
 
         this.stream = this.feed.createReadStream(this.streamOpts)
