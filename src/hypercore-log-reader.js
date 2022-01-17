@@ -4,6 +4,7 @@ const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const hypercore = require('hypercore')
 const Replicator = require('@hyperswarm/replicator')
+const bisect = require('hypercore-bisect')
 const { EventEmitter } = require('events')
 
 class HyperCoreLogReader extends EventEmitter {
@@ -50,6 +51,8 @@ class HyperCoreLogReader extends EventEmitter {
    * @param {Object} [streamOpts]
    * @param {number} [streamOpts.start]
    * @param {number} [streamOpts.end]
+   * @param {number} [streamOpts.dateStart]
+   * @param {number} [streamOpts.dateEnd]
    * @param {boolean} [streamOpts.snapshot]
    * @param {boolean} [streamOpts.tail]
    * @param {number} [streamOpts.timeout]
@@ -85,6 +88,25 @@ class HyperCoreLogReader extends EventEmitter {
     this.feedDir = feedDir
   }
 
+  async findIndexByDate (date) {
+    const opts = { returnClosest: true }
+    const comparator = (item, cb) => {
+      const logDate = Date.parse(item.split(' ')[0])
+
+      if (Number.isNaN(logDate)) throw new Error('the logs dont have a timestamp')
+
+      return cb(null, (date.getTime() > logDate ? -1 : 1))
+    }
+
+    return new Promise((resolve, reject) => {
+      return bisect(this.feed, comparator, opts, (err, index, entry) => {
+        if (err) return reject(err)
+
+        resolve(index)
+      })
+    })
+  }
+
   async start () {
     this.feed = hypercore(this.feedDir, this.feedKey, this.feedOpts)
 
@@ -96,16 +118,20 @@ class HyperCoreLogReader extends EventEmitter {
     await this.swarm.add(this.feed, this.swarmOpts)
 
     await new Promise((resolve) => {
-      this.feed.update({ ifAvailable: true }, () => {
+      this.feed.update({ ifAvailable: true }, async () => {
         this.feedKey = this.feed.key.toString('hex')
         const flen = this.feed.length
 
-        if (this.streamOpts.start && this.streamOpts.start < 0) {
+        if (this.streamOpts.dateStart) {
+          this.streamOpts.start = await this.findIndexByDate(this.streamOpts.dateStart)
+        } else if (this.streamOpts.start && this.streamOpts.start < 0) {
           this.streamOpts.start = flen + this.streamOpts.start
           if (this.streamOpts.start < 0) this.streamOpts.start = 0
         }
 
-        if (this.streamOpts.end && this.streamOpts.end < 0) {
+        if (this.streamOpts.dateEnd) {
+          this.streamOpts.end = await this.findIndexByDate(this.streamOpts.dateEnd)
+        } else if (this.streamOpts.end && this.streamOpts.end < 0) {
           this.streamOpts.end = flen + this.streamOpts.end
           if (this.streamOpts.end < 0) this.streamOpts.end = 0
         }
