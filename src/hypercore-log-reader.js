@@ -92,7 +92,11 @@ class HyperCoreLogReader extends EventEmitter {
   async findIndexByDate (date) {
     const opts = { returnClosest: true }
     const comparator = (item, cb) => {
-      return cb(null, (date.getTime() > parseLogDate(item) ? -1 : 1))
+      try {
+        return cb(null, (date.getTime() > parseLogDate(item) ? -1 : 1))
+      } catch (e) {
+        return cb(null, 1)
+      }
     }
 
     return new Promise((resolve, reject) => {
