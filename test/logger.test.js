@@ -108,5 +108,40 @@ module.exports = () => {
         '1970-01-01T00:30:00.000Z some data '
       ])
     }).timeout(1200000)
+
+    it('filter logs by date - skip logs without date', async () => {
+      const databuff = []
+
+      const server = new HyperCoreLogger(() => ram())
+      const push = (date) => server.feed.append(date + ' some data ')
+
+      await server.start()
+      push('\t')
+      push('1970-01-01T00:00:00.000Z')
+      push('1970-01-01T00:10:00.000Z')
+      push('1970-01-01T00:20:00.000Z')
+      push('\t')
+      push('1970-01-01T00:40:00.000Z')
+      push('\t')
+
+      const client = new HyperCoreLogReader(
+        () => ram(), server.feedKey, null, null, { startDate: new Date('1970-01-01T00:05:00.000Z'), endDate: new Date('1970-01-01T00:35:00.000Z') }
+      )
+      client.on('data', (data) => { databuff.push(data.toString()) })
+
+      await sleep(1500)
+      await client.start()
+      await sleep(3000)
+
+      await Promise.all([
+        server.stop(),
+        client.stop()
+      ])
+
+      expect(databuff).to.eql([
+        '1970-01-01T00:10:00.000Z some data ',
+        '1970-01-01T00:20:00.000Z some data '
+      ])
+    }).timeout(1200000)
   })
 }
