@@ -214,6 +214,8 @@ const main = async () => {
     })
 
     await client.start()
+
+    return { client }
   }
 
   if (cmd === 'write') {
@@ -237,7 +239,12 @@ const main = async () => {
     }
 
     await feed.start()
+    return { feed }
   }
 }
 
-main().catch(console.error)
+if (process.env.NODE_ENV === 'test') {
+  module.exports = { main }
+} else {
+  main().catch(console.error)
+}
