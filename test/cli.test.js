@@ -4,6 +4,7 @@ const sinon = require('sinon')
 const chai = require('chai')
   .use(require('dirty-chai'))
   .use(require('sinon-chai'))
+const decache = require('decache')
 const ram = require('random-access-memory')
 const { expect } = chai
 const { sleep } = require('./helper')
@@ -18,6 +19,7 @@ module.exports = () => {
     })
 
     afterEach(function () {
+      decache('../bin/hyperlog.js')
       console.log.restore()
     })
 
@@ -72,7 +74,7 @@ module.exports = () => {
       ])
     }).timeout(120000)
 
-    it ('should exclude logs by regexp', async () => {
+    it('should exclude logs by regexp', async () => {
       const server = new HyperCoreLogger(() => ram())
       const push = (i) => server.feed.append('some data ' + i)
 
