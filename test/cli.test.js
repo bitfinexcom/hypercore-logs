@@ -45,5 +45,57 @@ module.exports = () => {
         client.stop()
       ])
     }).timeout(120000)
+
+    it('should include logs by regexp', async () => {
+      const server = new HyperCoreLogger(() => ram())
+      const push = (i) => server.feed.append('some data ' + i)
+
+      await server.start()
+      push(0)
+      push(1)
+      push(2)
+      push(3)
+
+      process.argv = ['_', '__', 'read', '--key', server.feed.key.toString('hex'), '--include', '[12]']
+      const { main } = require('../bin/hyperlog')
+
+      const { client } = await main()
+      await sleep(2000)
+
+      expect(console.log).to.be.calledTwice()
+      expect(console.log).to.be.called.with('some data 1')
+      expect(console.log).to.be.called.with('some data 2')
+
+      await Promise.all([
+        server.stop(),
+        client.stop()
+      ])
+    }).timeout(120000)
+
+    it ('should exclude logs by regexp', async () => {
+      const server = new HyperCoreLogger(() => ram())
+      const push = (i) => server.feed.append('some data ' + i)
+
+      await server.start()
+      push(0)
+      push(1)
+      push(2)
+      push(3)
+
+      process.argv = ['_', '__', 'read', '--key', server.feed.key.toString('hex'), '--exclude', '[12]']
+      const { main } = require('../bin/hyperlog')
+
+      const { client } = await main()
+      await sleep(2000)
+
+      expect(console.log).to.be.calledTwice()
+      expect(console.log).to.be.called.with('some data 0')
+      expect(console.log).to.be.called.with('some data 3')
+
+      await Promise.all([
+        server.stop(),
+        client.stop()
+      ])
+    }).timeout(120000)
   })
 }
