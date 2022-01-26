@@ -99,5 +99,31 @@ module.exports = () => {
         client.stop()
       ])
     }).timeout(120000)
+
+    it('should omit prefix', async () => {
+      const server = new HyperCoreLogger(() => ram())
+      const push = (prefix) => server.feed.append(prefix + 'some data')
+
+      await server.start()
+      push('')
+      push('/foo/bar')
+      push('/foo')
+      push('')
+
+      process.argv = ['_', '__', 'read', '--key', server.feed.key.toString('hex'), '--remote-prefix', '/foo/bar']
+      const { main } = require('../bin/hyperlog')
+
+      const { client } = await main()
+      await sleep(2000)
+
+      expect(console.log).to.be.callCount(4)
+      expect(console.log).to.be.calledWith('/foosome data')
+      expect(console.log).to.be.calledWith('some data')
+
+      await Promise.all([
+        server.stop(),
+        client.stop()
+      ])
+    }).timeout(120000)
   })
 }
