@@ -38,9 +38,9 @@ module.exports = () => {
       const { client } = await main()
       await sleep(2000)
 
-      expect(console.log).to.be.called.with('some data 0')
-      expect(console.log).to.be.called.with('some data 1')
-      expect(console.log).to.be.called.with('some data 2')
+      expect(console.log).to.be.calledWith('some data 0')
+      expect(console.log).to.be.calledWith('some data 1')
+      expect(console.log).to.be.calledWith('some data 2')
 
       await Promise.all([
         server.stop(),
@@ -65,8 +65,8 @@ module.exports = () => {
       await sleep(2000)
 
       expect(console.log).to.be.calledTwice()
-      expect(console.log).to.be.called.with('some data 1')
-      expect(console.log).to.be.called.with('some data 2')
+      expect(console.log).to.be.calledWith('some data 1')
+      expect(console.log).to.be.calledWith('some data 2')
 
       await Promise.all([
         server.stop(),
@@ -91,8 +91,8 @@ module.exports = () => {
       await sleep(2000)
 
       expect(console.log).to.be.calledTwice()
-      expect(console.log).to.be.called.with('some data 0')
-      expect(console.log).to.be.called.with('some data 3')
+      expect(console.log).to.be.calledWith('some data 0')
+      expect(console.log).to.be.calledWith('some data 3')
 
       await Promise.all([
         server.stop(),
