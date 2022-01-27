@@ -10,8 +10,6 @@ const { expect } = chai
 const { sleep } = require('./helper')
 const { HyperCoreLogger } = require('../')
 
-process.env.NODE_ENV = 'test'
-
 module.exports = () => {
   describe('logger cli', () => {
     let server, client

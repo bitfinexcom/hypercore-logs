@@ -243,8 +243,8 @@ const main = async () => {
   }
 }
 
-if (process.env.NODE_ENV === 'test') {
-  module.exports = { main }
-} else {
+if (require.main === module) {
   main().catch(console.error)
+} else {
+  module.exports = { main }
 }
