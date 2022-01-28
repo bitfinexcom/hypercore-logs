@@ -150,6 +150,16 @@ const parseLogDate = (line) => {
   return logDate
 }
 
+/**
+ * @param {string} line
+ * @return {number}
+ */
+const hasValidDate = (line) => {
+  const logDate = Date.parse(line.split(' ')[0])
+
+  return !Number.isNaN(logDate)
+}
+
 module.exports = {
   fullPath,
   isDir,
@@ -164,5 +174,6 @@ module.exports = {
   isHexStr,
   isDirPath,
   escapeRegex,
-  parseLogDate
+  parseLogDate,
+  hasValidDate
 }
