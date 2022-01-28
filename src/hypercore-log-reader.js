@@ -4,9 +4,8 @@ const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
 const hypercore = require('hypercore')
 const Replicator = require('@hyperswarm/replicator')
-const bisect = require('hypercore-bisect')
 const { EventEmitter } = require('events')
-const { parseLogDate } = require('./helper')
+const { parseLogDate, hasValidDate } = require('./helper')
 
 class HyperCoreLogReader extends EventEmitter {
   /**
@@ -89,23 +88,51 @@ class HyperCoreLogReader extends EventEmitter {
     this.feedDir = feedDir
   }
 
-  async findIndexByDate (date) {
-    const opts = { returnClosest: true }
-    const comparator = (item, cb) => {
-      try {
-        return cb(null, (date.getTime() > parseLogDate(item) ? -1 : 1))
-      } catch (e) {
-        return cb(null, 1)
-      }
-    }
-
+  async getByIndex (index) {
     return new Promise((resolve, reject) => {
-      return bisect(this.feed, comparator, opts, (err, index, entry) => {
+      this.feed.get(index, (err, data) => {
         if (err) return reject(err)
-
-        resolve(index)
+        resolve(data)
       })
     })
+  }
+
+  async bisect (compare, getByIndex) {
+    let top = this.feed.length
+    let bottom = 0
+
+    async function _bisect () {
+      const middle = Math.floor((top + bottom) / 2)
+      const data = await getByIndex(middle)
+      const cmp = compare(data)
+
+      if (cmp < 0) {
+        bottom = middle
+      } else {
+        top = middle
+      }
+
+      const newMiddle = Math.floor((top + bottom) / 2)
+      if (newMiddle === middle) {
+        return middle
+      }
+
+      return _bisect()
+    }
+
+    return _bisect()
+  }
+
+  async findIndexByDate (date) {
+    const comparator = item => (date.getTime() > item ? -1 : 1)
+    const getValidLog = async index => {
+      const line = await this.getByIndex(index)
+
+      if (hasValidDate(line)) return parseLogDate(line)
+
+      return getValidLog(index - 1)
+    }
+    return this.bisect(comparator, getValidLog)
   }
 
   async start () {
