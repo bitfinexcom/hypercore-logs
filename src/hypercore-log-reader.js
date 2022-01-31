@@ -5,6 +5,7 @@ const debug = require('debug')('hcore-logger')
 const hypercore = require('hypercore')
 const Replicator = require('@hyperswarm/replicator')
 const { EventEmitter } = require('events')
+const { bisect } = require('./bisect')
 const { parseLogDate, hasValidDate } = require('./helper')
 
 class HyperCoreLogReader extends EventEmitter {
@@ -97,32 +98,6 @@ class HyperCoreLogReader extends EventEmitter {
     })
   }
 
-  async bisect (compare, getByIndex) {
-    let top = this.feed.length
-    let bottom = 0
-
-    async function _bisect () {
-      const middle = Math.floor((top + bottom) / 2)
-      const data = await getByIndex(middle)
-      const cmp = compare(data)
-
-      if (cmp < 0) {
-        bottom = middle
-      } else {
-        top = middle
-      }
-
-      const newMiddle = Math.floor((top + bottom) / 2)
-      if (newMiddle === middle) {
-        return middle
-      }
-
-      return _bisect()
-    }
-
-    return _bisect()
-  }
-
   async findIndexByDate (date) {
     const comparator = item => (date.getTime() > item ? -1 : 1)
     const getValidLog = async index => {
@@ -132,7 +107,7 @@ class HyperCoreLogReader extends EventEmitter {
 
       return getValidLog(index - 1)
     }
-    return this.bisect(comparator, getValidLog)
+    return bisect(comparator, getValidLog, this.feed.length)
   }
 
   async start () {
