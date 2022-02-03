@@ -1,5 +1,7 @@
 'use strict'
 
+const fs = require('fs')
+const path = require('path')
 const chai = require('chai')
   .use(require('dirty-chai'))
 const { expect } = chai
@@ -72,6 +74,49 @@ module.exports = () => {
       expect(databuff.length).to.be.eq(2)
       expect(databuff[0]).to.be.equal('some data 3')
       expect(databuff[1]).to.be.equal('some data 4')
+    }).timeout(1200000)
+
+    it('prints new logs on startup using local datadir', async () => {
+      const tmpFolder = path.join(__dirname, './tmp')
+
+      if (fs.existsSync(tmpFolder)) await fs.promises.rm(tmpFolder, { recursive: true })
+
+      const server = new HyperCoreLogger(() => ram())
+      const push = (i) => server.feed.append('some data ' + i)
+
+      await server.start()
+      push(0)
+      push(1)
+      push(2)
+      push(3)
+
+      const client = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
+
+      await sleep(500)
+      await client.start()
+      await sleep(3000)
+
+      await client.stop()
+
+      push(4)
+      push(5)
+
+      const client2 = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
+      const databuff2 = []
+      client2.on('data', (data) => { databuff2.push(data.toString()) })
+
+      await sleep(500)
+      await client2.start()
+      await sleep(3000)
+
+      await client2.stop()
+
+      expect(databuff2).to.eql([
+        'some data 4',
+        'some data 5'
+      ], 'the client should print only new logs not contained in the local data directory')
+
+      await server.stop()
     }).timeout(1200000)
   })
 }
