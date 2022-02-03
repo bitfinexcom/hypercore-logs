@@ -76,47 +76,54 @@ module.exports = () => {
       expect(databuff[1]).to.be.equal('some data 4')
     }).timeout(1200000)
 
-    it('prints new logs on startup using local datadir', async () => {
+    describe('print logs on startup', () => {
       const tmpFolder = path.join(__dirname, './tmp')
 
-      if (fs.existsSync(tmpFolder)) await fs.promises.rm(tmpFolder, { recursive: true })
+      beforeEach(async () => {
+        if (fs.existsSync(tmpFolder)) await fs.promises.rm(tmpFolder, { recursive: true })
+      })
 
-      const server = new HyperCoreLogger(() => ram())
-      const push = (i) => server.feed.append('some data ' + i)
+      afterEach(async () => {
+        if (fs.existsSync(tmpFolder)) await fs.promises.rm(tmpFolder, { recursive: true })
+      })
 
-      await server.start()
-      push(0)
-      push(1)
-      push(2)
-      push(3)
+      it('should print the logs not contained in the local datadir by default', async () => {
+        const server = new HyperCoreLogger(() => ram())
+        const push = (i) => server.feed.append('some data ' + i)
 
-      const client = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
+        await server.start()
+        push(0)
+        push(1)
+        push(2)
+        push(3)
 
-      await sleep(500)
-      await client.start()
-      await sleep(3000)
+        const client = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
 
-      await client.stop()
+        await sleep(500)
+        await client.start()
+        await sleep(3000)
 
-      push(4)
-      push(5)
+        await client.stop()
 
-      const client2 = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
-      const databuff2 = []
-      client2.on('data', (data) => { databuff2.push(data.toString()) })
+        push(4)
+        push(5)
 
-      await sleep(500)
-      await client2.start()
-      await sleep(3000)
+        const client2 = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
+        const databuff = []
+        client2.on('data', (data) => { databuff.push(data.toString()) })
 
-      await client2.stop()
+        await sleep(500)
+        await client2.start()
+        await sleep(3000)
 
-      expect(databuff2).to.eql([
-        'some data 4',
-        'some data 5'
-      ], 'the client should print only new logs not contained in the local data directory')
+        await client2.stop()
 
-      await server.stop()
-    }).timeout(1200000)
+        expect(databuff).to.eql([
+          'some data 4',
+          'some data 5'
+        ])
+        await server.stop()
+      }).timeout(1200000)
+    })
   })
 }
