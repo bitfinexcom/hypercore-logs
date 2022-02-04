@@ -9,7 +9,7 @@ const { expect } = chai
 const {
   fullPath, isDir, isGlob, isUsrDir, fExists, globPath,
   resolveUsrDir, resolvePaths, isHexStr, createDir, createFileDir,
-  escapeRegex, parseLogDate
+  escapeRegex, parseLogDate, hasValidDate
 } = require('../src/helper')
 
 module.exports = () => {
@@ -232,6 +232,16 @@ module.exports = () => {
     it('parseLogDate - invalid date', () => {
       expect(() => parseLogDate(null + ' some data')).to.throw()
       expect(() => parseLogDate(Date.now() + ' some data')).to.throw()
+    })
+
+    it('hasValidDate', () => {
+      const date = new Date()
+
+      expect(hasValidDate(date.toISOString() + ' some data')).to.be.true()
+    })
+
+    it('hasValidDate - invalid date', () => {
+      expect(hasValidDate(null + ' some data')).to.be.false()
     })
   })
 }
