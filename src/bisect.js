@@ -9,6 +9,8 @@ async function bisect (compare, getByIndex, length) {
     const data = await getByIndex(middle)
     const cmp = compare(data)
 
+    if (cmp === 0) return middle
+
     if (cmp < 0) {
       bottom = middle
     } else {
