@@ -145,7 +145,7 @@ const escapeRegex = (str) => {
 const parseLogDate = (line) => {
   const logDate = Date.parse(line.split(' ')[0])
 
-  if (Number.isNaN(logDate)) throw new Error('the log line don\'t have a timestamp')
+  if (Number.isNaN(logDate)) throw new Error('LOG_TIMESTAMP_INVALID')
 
   return logDate
 }
