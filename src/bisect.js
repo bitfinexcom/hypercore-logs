@@ -1,5 +1,28 @@
 'use strict'
 
+/**
+ * Comparator
+ * @name CompareFunction
+ * @function
+ * @param {String} data
+ * @return {-1 | 1 | 0}
+*/
+
+/**
+ * Get by index
+ * @name GetByIndexFunction
+ * @function
+ * @param {Number} index
+ * @return {String}
+*/
+
+/**
+ * Bisect search
+ * @param {CompareFunction} compare
+ * @param {GetByIndexFunction} getByIndex retrieve element by index
+ * @param {Number} length feed's length
+ * @returns Number
+ */
 async function bisect (compare, getByIndex, length) {
   let top = length
   let bottom = 0
