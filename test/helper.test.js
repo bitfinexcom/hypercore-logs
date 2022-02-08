@@ -8,7 +8,8 @@ const os = require('os')
 const { expect } = chai
 const {
   fullPath, isDir, isGlob, isUsrDir, fExists, globPath,
-  resolveUsrDir, resolvePaths, isHexStr, createDir, createFileDir, escapeRegex
+  resolveUsrDir, resolvePaths, isHexStr, createDir, createFileDir,
+  escapeRegex, parseLogDate, hasValidDate
 } = require('../src/helper')
 
 module.exports = () => {
@@ -219,6 +220,28 @@ module.exports = () => {
     it('escapeRegex - it should escape regex special chars', () => {
       const text = escapeRegex('^test$.*')
       expect(text).to.be.equal('\\^test\\$\\.\\*')
+    })
+
+    it('parseLogDate', () => {
+      const date = new Date()
+      const extractedTime = parseLogDate(date.toISOString() + ' some data')
+
+      expect(extractedTime).to.be.equal(date.getTime())
+    })
+
+    it('parseLogDate - invalid date', () => {
+      expect(() => parseLogDate(null + ' some data')).to.throw()
+      expect(() => parseLogDate(Date.now() + ' some data')).to.throw()
+    })
+
+    it('hasValidDate', () => {
+      const date = new Date()
+
+      expect(hasValidDate(date.toISOString() + ' some data')).to.be.true()
+    })
+
+    it('hasValidDate - invalid date', () => {
+      expect(hasValidDate(null + ' some data')).to.be.false()
     })
   })
 }
