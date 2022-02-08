@@ -138,6 +138,28 @@ const escapeRegex = (str) => {
   return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&')
 }
 
+/**
+ * @param {string} line
+ * @return {number}
+ */
+const parseLogDate = (line) => {
+  const logDate = Date.parse(line.split(' ')[0])
+
+  if (Number.isNaN(logDate)) throw new Error('LOG_TIMESTAMP_INVALID')
+
+  return logDate
+}
+
+/**
+ * @param {string} line
+ * @return {number}
+ */
+const hasValidDate = (line) => {
+  const logDate = Date.parse(line.split(' ')[0])
+
+  return !Number.isNaN(logDate)
+}
+
 module.exports = {
   fullPath,
   isDir,
@@ -151,5 +173,7 @@ module.exports = {
   createFileDir,
   isHexStr,
   isDirPath,
-  escapeRegex
+  escapeRegex,
+  parseLogDate,
+  hasValidDate
 }

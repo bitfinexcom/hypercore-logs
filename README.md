@@ -84,6 +84,10 @@ Options:
                  negative it's considered from feed end                 [number]
   --end          feed read end, ignored in case if tail is specified, if
                  negative it's considered from feed end                 [number]
+  --start-date   feed read start by date, ignored in case if start
+                 is specified                                           [string]
+  --end-date     feed read end by date, ignored in case if end
+                 is specified                                           [string]
   --include      filter logs by Regular expression                      [string]
   --exclude      exclude logs by Regular expression, can be used along
                  with "include" option                                  [string]
@@ -155,6 +159,12 @@ hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30f
 
 ```console
 hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30fef8e --console --include "\[server\]" --exclude "warn"
+```
+
+### Example - read and filter logs by start/end date
+
+```console
+node ./bin/hyperlog.js read  --key 0db350f414a93274e5613930b79c7226f21270cfc1435b96350422a0abf63dc2 --console --start-date 2022-01-20T12:38:14.973Z --end-date 2022-01-21T12:38:25.977Z
 ```
 
 ### Example - code

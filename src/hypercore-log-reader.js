@@ -5,6 +5,8 @@ const debug = require('debug')('hcore-logger')
 const hypercore = require('hypercore')
 const Replicator = require('@hyperswarm/replicator')
 const { EventEmitter } = require('events')
+const { bisect } = require('./bisect')
+const { parseLogDate, hasValidDate } = require('./helper')
 
 class HyperCoreLogReader extends EventEmitter {
   /**
@@ -50,6 +52,8 @@ class HyperCoreLogReader extends EventEmitter {
    * @param {Object} [streamOpts]
    * @param {number} [streamOpts.start]
    * @param {number} [streamOpts.end]
+   * @param {number} [streamOpts.startDate]
+   * @param {number} [streamOpts.endDate]
    * @param {boolean} [streamOpts.snapshot]
    * @param {boolean} [streamOpts.tail]
    * @param {number} [streamOpts.timeout]
@@ -85,6 +89,27 @@ class HyperCoreLogReader extends EventEmitter {
     this.feedDir = feedDir
   }
 
+  async getByIndex (index) {
+    return new Promise((resolve, reject) => {
+      this.feed.get(index, (err, data) => {
+        if (err) return reject(err)
+        resolve(data)
+      })
+    })
+  }
+
+  async findIndexByDate (date) {
+    const comparator = item => (date.getTime() > item ? -1 : 1)
+    const getValidLog = async index => {
+      const line = await this.getByIndex(index)
+
+      if (hasValidDate(line)) return parseLogDate(line)
+
+      return getValidLog(index - 1)
+    }
+    return bisect(comparator, getValidLog, this.feed.length)
+  }
+
   async start () {
     this.feed = hypercore(this.feedDir, this.feedKey, this.feedOpts)
 
@@ -96,18 +121,22 @@ class HyperCoreLogReader extends EventEmitter {
     await this.swarm.add(this.feed, this.swarmOpts)
 
     await new Promise((resolve) => {
-      this.feed.update({ ifAvailable: true }, () => {
+      this.feed.update({ ifAvailable: true }, async () => {
         this.feedKey = this.feed.key.toString('hex')
         const flen = this.feed.length
 
         if (this.streamOpts.start && this.streamOpts.start < 0) {
           this.streamOpts.start = flen + this.streamOpts.start
           if (this.streamOpts.start < 0) this.streamOpts.start = 0
+        } else if (this.streamOpts.startDate) {
+          this.streamOpts.start = await this.findIndexByDate(this.streamOpts.startDate) + 1
         }
 
         if (this.streamOpts.end && this.streamOpts.end < 0) {
           this.streamOpts.end = flen + this.streamOpts.end
           if (this.streamOpts.end < 0) this.streamOpts.end = 0
+        } else if (this.streamOpts.endDate) {
+          this.streamOpts.end = await this.findIndexByDate(this.streamOpts.endDate) + 1
         }
 
         this.stream = this.feed.createReadStream(this.streamOpts)
