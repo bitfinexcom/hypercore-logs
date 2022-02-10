@@ -1,5 +1,7 @@
 'use strict'
 
+const fs = require('fs')
+const path = require('path')
 const chai = require('chai')
   .use(require('dirty-chai'))
 const { expect } = chai
@@ -73,6 +75,99 @@ module.exports = () => {
       expect(databuff[0]).to.be.equal('some data 3')
       expect(databuff[1]).to.be.equal('some data 4')
     }).timeout(1200000)
+
+    describe('print logs on startup', () => {
+      const tmpFolder = path.join(__dirname, './tmp')
+
+      beforeEach(async () => {
+        if (fs.existsSync(tmpFolder)) await fs.promises.rm(tmpFolder, { recursive: true })
+      })
+
+      afterEach(async () => {
+        if (fs.existsSync(tmpFolder)) await fs.promises.rm(tmpFolder, { recursive: true })
+      })
+
+      it('should print the logs not contained in the local datadir by default', async () => {
+        const server = new HyperCoreLogger(() => ram())
+        const push = (i) => server.feed.append('some data ' + i)
+
+        await server.start()
+        push(0)
+        push(1)
+        push(2)
+        push(3)
+
+        const client = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
+
+        await sleep(500)
+        await client.start()
+        await sleep(3000)
+
+        await client.stop()
+
+        push(4)
+        push(5)
+
+        const client2 = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
+        const databuff = []
+        client2.on('data', (data) => { databuff.push(data.toString()) })
+
+        await sleep(500)
+        await client2.start()
+        await sleep(3000)
+
+        await client2.stop()
+
+        expect(databuff).to.eql([
+          'some data 4',
+          'some data 5'
+        ])
+        await server.stop()
+      }).timeout(1200000)
+
+      it('should print all logs including the local datadir if start option is specified', async () => {
+        const server = new HyperCoreLogger(() => ram())
+        const push = (i) => server.feed.append('some data ' + i)
+
+        await server.start()
+        push(0)
+        push(1)
+        push(2)
+        push(3)
+
+        const client = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, {})
+
+        await sleep(500)
+        await client.start()
+        await sleep(3000)
+
+        await client.stop()
+
+        push(4)
+        push(5)
+
+        const client2 = new HyperCoreLogReader(tmpFolder, server.feedKey, null, null, { start: 0 })
+        const databuff = []
+        client2.on('data', (data) => { databuff.push(data.toString()) })
+
+        await sleep(500)
+        await client2.start()
+        await sleep(3000)
+
+        await client2.stop()
+
+        expect(databuff).to.eql([
+          'some data 0',
+          'some data 1',
+          'some data 2',
+          'some data 3',
+          'some data 4',
+          'some data 5'
+        ])
+
+        await server.stop()
+      }).timeout(1200000)
+    })
 
     it('filter logs by date', async () => {
       const databuff = []

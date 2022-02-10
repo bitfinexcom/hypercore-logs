@@ -116,6 +116,7 @@ class HyperCoreLogReader extends EventEmitter {
     await new Promise((resolve, reject) => {
       this.feed.ready((err) => err ? reject(err) : resolve())
     })
+    const localLength = this.feed.length
 
     this.swarm = new Replicator()
     await this.swarm.add(this.feed, this.swarmOpts)
@@ -130,6 +131,8 @@ class HyperCoreLogReader extends EventEmitter {
           if (this.streamOpts.start < 0) this.streamOpts.start = 0
         } else if (this.streamOpts.startDate) {
           this.streamOpts.start = await this.findIndexByDate(this.streamOpts.startDate) + 1
+        } else if (!Number.isFinite(this.streamOpts.start)) {
+          this.streamOpts.start = localLength
         }
 
         if (this.streamOpts.end && this.streamOpts.end < 0) {
