@@ -1,3 +1,9 @@
+# 1.0.0
+- feature: filter logs
+- feature: start and end date filter support
+- chore: cli tests
+- feature: print only new content when hypercore is stored in file system
+
 # 0.5.0
 - feature: watch new files
 - feature: omit remote path prefix
