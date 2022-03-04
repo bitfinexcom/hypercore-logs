@@ -114,7 +114,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
       }
     }
 
-    const tail = new Tail(file)
+    const tail = new Tail(file, { useWatchFile: true })
     tail.on('line', (line) => {
       const data = HyperCoreFileLogger.formatLine(line, options.multiple && file) + '\n'
       this.feed.append(data)
