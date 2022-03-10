@@ -167,6 +167,16 @@ hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30f
 node ./bin/hyperlog.js read  --key 0db350f414a93274e5613930b79c7226f21270cfc1435b96350422a0abf63dc2 --console --start-date 2022-01-20T12:38:14.973Z --end-date 2022-01-21T12:38:25.977Z
 ```
 
+### Example - DHT logger
+```console
+node ./bin/hyperlog.js dht-write --file ../logs/1597852241433.log
+```
+
+### Example - DHT log reader
+```console
+node ./bin/hyperlog.js dht-read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30fef8e
+```
+
 ### Example - code
 
 Log writer:
