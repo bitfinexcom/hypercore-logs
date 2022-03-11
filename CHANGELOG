@@ -1,3 +1,7 @@
+# 1.1.0
+- feature: add hyperswarm dht logger & reader
+- chore: dht logger tests
+
 # 1.0.0
 - feature: filter logs
 - feature: start and end date filter support
