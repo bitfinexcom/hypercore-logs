@@ -169,7 +169,7 @@ node ./bin/hyperlog.js read  --key 0db350f414a93274e5613930b79c7226f21270cfc1435
 
 ### Example - DHT logger
 ```console
-node ./bin/hyperlog.js dht-write --file ../logs/1597852241433.log
+node ./bin/hyperlog.js dht-write --file ../logs/1597852241433.log --seed 4416037e9bb30fef8e
 ```
 
 ### Example - DHT log reader

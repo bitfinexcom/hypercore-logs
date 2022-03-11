@@ -3,13 +3,16 @@
 const debug = require('debug')('hcore-logger')
 const DHT = require('@hyperswarm/dht')
 const Tail = require('tail').Tail
+const { crypto_sign_SEEDBYTES } = require('sodium-universal') // eslint-disable-line
 
 class HyperSwarmDHTLogger {
   /**
    * @param {string} file
+   * @param {string|null} seed
    */
-  constructor (file) {
+  constructor (file, seed = null) {
     this.file = file
+    this.seed = seed && Buffer.allocUnsafe(crypto_sign_SEEDBYTES).fill(seed)
 
     this.sockets = []
     this.node = null
@@ -30,7 +33,7 @@ class HyperSwarmDHTLogger {
       })
     })
 
-    const keyPair = DHT.keyPair()
+    const keyPair = DHT.keyPair(this.seed)
 
     this.feedKey = keyPair.publicKey.toString('hex')
     debug('key: %s', this.feedKey)

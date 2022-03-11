@@ -130,6 +130,12 @@ const yargs = require('yargs')
         'use quoted arg when passing globs! ' +
         'Use either file or port option.'
     })
+      .option('seed', {
+        type: 'string',
+        alias: 's',
+        default: null,
+        desc: 'Key pair\'s seed'
+      })
   )
   .demandCommand()
   .recommendCommands()
@@ -287,7 +293,7 @@ const main = async () => {
 
   if (cmd === 'dht-write') {
     if (!argv.file) throw new Error('ERR_FILE_MISSING')
-    const feed = new HyperSwarmDHTLogger(argv.file)
+    const feed = new HyperSwarmDHTLogger(argv.file, argv.seed)
 
     await feed.start()
     return { feed }
