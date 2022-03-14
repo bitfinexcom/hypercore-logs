@@ -43,7 +43,6 @@ class HyperSwarmDHTLogger {
 
     this.fileWatcher = new Tail(this.file)
     this.fileWatcher.on('line', (line) => {
-      console.log(line)
       this.sockets.forEach(socket => {
         socket.write(line)
       })
