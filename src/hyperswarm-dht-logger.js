@@ -28,6 +28,10 @@ class HyperSwarmDHTLogger {
       this.sockets.push(socket)
       debug('peer connected from %s:%d')
 
+      socket.on('error', error => {
+        debug('socket connection %s', error)
+      })
+
       socket.on('end', () => {
         this.sockets.splice(this.sockets.indexOf(socket), 1)
       })
