@@ -32,8 +32,12 @@ class HyperSwarmDHTLogReader extends EventEmitter {
       this.emit('data', data.toString('utf-8'))
     })
 
+    this.socket.on('end', function () {
+      debug('Socked ended')
+    })
+
     this.socket.on('close', function () {
-      debug('Client closed...')
+      debug('Client closed')
     })
   }
 
