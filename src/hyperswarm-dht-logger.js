@@ -25,15 +25,18 @@ class HyperSwarmDHTLogger {
     this.server = this.node.createServer()
 
     this.server.on('connection', async socket => {
-      this.sockets.push(socket)
-      debug('peer connected from %s:%d')
+      debug('socket connected')
+      this.addSocket(socket)
 
       socket.on('error', error => {
         debug('socket connection %s', error)
+        this.removeSocket(socket)
+        debug('socket ended')
       })
 
       socket.on('end', () => {
-        this.sockets.splice(this.sockets.indexOf(socket), 1)
+        this.removeSocket(socket)
+        debug('socket ended')
       })
     })
 
@@ -54,7 +57,17 @@ class HyperSwarmDHTLogger {
     this.fileWatcher.watch()
   }
 
+  addSocket (socket) {
+    this.sockets.push(socket)
+  }
+
+  removeSocket (socket) {
+    this.sockets.splice(this.sockets.indexOf(socket), 1)
+    socket.end()
+  }
+
   async stop () {
+    this.sockets.slice().forEach(socket => this.removeSocket(socket))
     await this.server.close()
     await this.node.destroy()
     this.fileWatcher.unwatch()
