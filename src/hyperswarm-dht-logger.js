@@ -64,6 +64,7 @@ class HyperSwarmDHTLogger {
   removeSocket (socket) {
     this.sockets.splice(this.sockets.indexOf(socket), 1)
     socket.end()
+    socket.destroy()
   }
 
   async stop () {
