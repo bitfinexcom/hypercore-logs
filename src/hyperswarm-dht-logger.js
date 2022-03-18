@@ -2,6 +2,7 @@
 
 const debug = require('debug')('hcore-logger')
 const DHT = require('@hyperswarm/dht')
+const uuid = require('uuid')
 const Tail = require('tail').Tail
 const { crypto_sign_SEEDBYTES } = require('sodium-universal') // eslint-disable-line
 
@@ -14,7 +15,7 @@ class HyperSwarmDHTLogger {
     this.file = file
     this.seed = seed && Buffer.allocUnsafe(crypto_sign_SEEDBYTES).fill(seed)
 
-    this.sockets = []
+    this.sockets = new Map()
     this.node = null
     this.sever = null
     this.fileWatcher = null
@@ -25,18 +26,19 @@ class HyperSwarmDHTLogger {
     this.server = this.node.createServer()
 
     this.server.on('connection', socket => {
-      debug('socket connected')
-      this.addSocket(socket)
+      const id = uuid.v4()
+      debug('socket %s connected', id)
+      this.addSocket(id, socket)
 
       socket.on('error', error => {
-        debug('socket connection %s', error)
-        this.removeSocket(socket)
-        debug('socket ended')
+        debug('socket %s connection %s', id, error)
+        this.removeSocket(id)
+        debug('socket %s ended', id)
       })
 
       socket.on('end', () => {
-        this.removeSocket(socket)
-        debug('socket ended')
+        this.removeSocket(id)
+        debug('socket %s ended', id)
       })
     })
 
@@ -50,25 +52,29 @@ class HyperSwarmDHTLogger {
 
     this.fileWatcher = new Tail(this.file)
     this.fileWatcher.on('line', (line) => {
-      this.sockets.forEach(socket => {
+      Array.from(this.sockets.values()).forEach(socket => {
         socket.write(line)
       })
     })
     this.fileWatcher.watch()
   }
 
-  addSocket (socket) {
-    this.sockets.push(socket)
+  addSocket (id, socket) {
+    this.sockets.set(id, socket)
   }
 
-  removeSocket (socket) {
-    this.sockets.splice(this.sockets.indexOf(socket), 1)
-    socket.end()
-    socket.destroy()
+  removeSocket (id) {
+    const socket = this.sockets.get(id)
+
+    if (socket) {
+      this.sockets.delete(id)
+      socket.end()
+      socket.destroy()
+    }
   }
 
   async stop () {
-    this.sockets.slice().forEach(socket => this.removeSocket(socket))
+    Array.from(this.sockets.keys()).forEach(id => this.removeSocket(id))
     await this.server.close()
     await this.node.destroy()
     this.fileWatcher.unwatch()
