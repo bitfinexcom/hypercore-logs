@@ -26,6 +26,7 @@ class HyperSwarmDHTLogReader extends EventEmitter {
 
     this.socket.on('error', error => {
       debug(error)
+      this.emit('error', error)
     })
 
     this.socket.on('data', data => {
