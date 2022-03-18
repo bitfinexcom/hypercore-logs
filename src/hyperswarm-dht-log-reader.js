@@ -20,7 +20,7 @@ class HyperSwarmDHTLogReader extends EventEmitter {
     this.node = new DHT()
     this.socket = this.node.connect(Buffer.from(this.feedKey, 'hex'))
 
-    this.socket.on('open', function () {
+    this.socket.on('open', () => {
       debug('socket fully open with the other peer')
     })
 
@@ -32,11 +32,11 @@ class HyperSwarmDHTLogReader extends EventEmitter {
       this.emit('data', data.toString('utf-8'))
     })
 
-    this.socket.on('end', function () {
+    this.socket.on('end', () => {
       debug('Socked ended')
     })
 
-    this.socket.on('close', function () {
+    this.socket.on('close', () => {
       debug('Client closed')
     })
   }
