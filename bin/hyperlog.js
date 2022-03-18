@@ -261,6 +261,7 @@ const main = async () => {
     const client = new HyperSwarmDHTLogReader(key)
 
     client.on('data', console.log)
+    client.on('error', () => client.stop())
 
     await client.start()
 
