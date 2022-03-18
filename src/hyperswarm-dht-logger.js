@@ -24,7 +24,7 @@ class HyperSwarmDHTLogger {
     this.node = new DHT()
     this.server = this.node.createServer()
 
-    this.server.on('connection', async socket => {
+    this.server.on('connection', socket => {
       debug('socket connected')
       this.addSocket(socket)
 
