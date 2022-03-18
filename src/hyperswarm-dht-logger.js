@@ -52,9 +52,9 @@ class HyperSwarmDHTLogger {
 
     this.fileWatcher = new Tail(this.file)
     this.fileWatcher.on('line', (line) => {
-      Array.from(this.sockets.values()).forEach(socket => {
+      for (const socket of this.sockets.values()) {
         socket.write(line)
-      })
+      }
     })
     this.fileWatcher.watch()
   }
