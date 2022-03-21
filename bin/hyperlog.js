@@ -72,6 +72,16 @@ const yargs = require('yargs')
       })
   )
   .command(
+    'dht-read',
+    'creates a reader for a hyperswarm log',
+    (y) => y.option('key', {
+      type: 'string',
+      alias: 'k',
+      demandOption: true,
+      description: 'feed public key, use either hex string or path to file'
+    })
+  )
+  .command(
     'write',
     'creates a hypercore log writer',
     (y) => y.option('key', {
@@ -110,19 +120,36 @@ const yargs = require('yargs')
         description: 'UDP server port, use either file or port option'
       })
   )
+  .command(
+    'dht-write',
+    'creates a hyperswarm log writer',
+    (y) => y.option('file', {
+      type: 'string',
+      alias: 'f',
+      desc: 'file, dir or glob pattern that will be tailed, ' +
+        'use quoted arg when passing globs! ' +
+        'Use either file or port option.'
+    })
+      .option('seed', {
+        type: 'string',
+        alias: 's',
+        default: null,
+        desc: 'Key pair\'s seed'
+      })
+  )
   .demandCommand()
   .recommendCommands()
   .version(pkg.version)
   .help()
 
 const {
-  HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger
+  HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger, HyperSwarmDHTLogReader, HyperSwarmDHTLogger
 } = require('../')
 const {
   createDir, createFileDir, fullPath, isHexStr, isDir, isDirPath
 } = require('../src/helper')
 
-const cmds = ['read', 'write']
+const cmds = ['read', 'write', 'dht-read', 'dht-write']
 
 const parseKey = (key, keylen, warning) => {
   try {
@@ -228,6 +255,19 @@ const main = async () => {
     return { client }
   }
 
+  if (cmd === 'dht-read') {
+    if (!key) throw new Error('ERR_KEY_REQUIRED')
+
+    const client = new HyperSwarmDHTLogReader(key)
+
+    client.on('data', console.log)
+    client.on('error', () => client.stop())
+
+    await client.start()
+
+    return { client }
+  }
+
   if (cmd === 'write') {
     if (argv.port && argv.file) throw new Error('ERR_TRANSPORT_AMBIGUOUS')
 
@@ -247,6 +287,14 @@ const main = async () => {
     } else {
       throw new Error('ERR_TRANSPORT_MISSING')
     }
+
+    await feed.start()
+    return { feed }
+  }
+
+  if (cmd === 'dht-write') {
+    if (!argv.file) throw new Error('ERR_FILE_MISSING')
+    const feed = new HyperSwarmDHTLogger(argv.file, argv.seed)
 
     await feed.start()
     return { feed }

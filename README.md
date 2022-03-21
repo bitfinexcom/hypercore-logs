@@ -27,8 +27,10 @@ hyperlog --help
 hyperlog <command>
 
 Commands:
-  hyperlog read   creates a reader for a hypercore log
-  hyperlog write  creates a hypercore log writer
+  hyperlog read       creates a reader for a hypercore log
+  hyperlog dht-read   creates a reader for a hyperswarm log
+  hyperlog write      creates a hypercore log writer
+  hyperlog dht-write  creates a hyperswarm log writer
 
 Options:
   --version  Show version number                                       [boolean]
@@ -61,6 +63,21 @@ Options:
   --port, -p        UDP server port, use either file or port option     [number]
 ```
 
+DHT write command usage:
+```console
+hyperlog dht-write --help
+hyperlog dht-write
+
+creates a hyperswarm log writer
+
+Options:
+      --version  Show version number                                   [boolean]
+      --help     Show help                                             [boolean]
+  -f, --file     file, dir or glob pattern that will be tailed, use quoted arg
+                 when passing globs! Use either file or port option.    [string]
+  -s, --seed     Key pair's seed                        [string] [default: null]
+```
+
 Read command usage:
 ```console
 hyperlog read --help
@@ -91,6 +108,20 @@ Options:
   --include      filter logs by Regular expression                      [string]
   --exclude      exclude logs by Regular expression, can be used along
                  with "include" option                                  [string]
+```
+
+DHT read command usage:
+```console
+hyperlog dht-read --help
+hyperlog dht-read
+
+creates a reader for a hyperswarm log
+
+Options:
+      --version  Show version number                                   [boolean]
+      --help     Show help                                             [boolean]
+  -k, --key      feed public key, use either hex string or path to file
+                                                             [string] [required]
 ```
 
 ## Examples
@@ -165,6 +196,16 @@ hyperlog read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30f
 
 ```console
 node ./bin/hyperlog.js read  --key 0db350f414a93274e5613930b79c7226f21270cfc1435b96350422a0abf63dc2 --console --start-date 2022-01-20T12:38:14.973Z --end-date 2022-01-21T12:38:25.977Z
+```
+
+### Example - DHT logger
+```console
+node ./bin/hyperlog.js dht-write --file ../logs/1597852241433.log --seed 4416037e9bb30fef8e
+```
+
+### Example - DHT log reader
+```console
+node ./bin/hyperlog.js dht-read --key 8be30f022777683321f685125315e5a7a79a1978829e5e4416037e9bb30fef8e
 ```
 
 ### Example - code
