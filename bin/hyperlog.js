@@ -143,11 +143,10 @@ const yargs = require('yargs')
   .help()
 
 const {
-  HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger, HyperSwarmDHTLogReader, HyperSwarmDHTLogger
+  HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger, HyperSwarmDHTLogReader,
+  HyperSwarmDHTLogger, LogsPrinter
 } = require('../')
-const {
-  createDir, createFileDir, fullPath, isHexStr, isDir, isDirPath
-} = require('../src/helper')
+const { fullPath, isHexStr } = require('../src/helper')
 
 const cmds = ['read', 'write', 'dht-read', 'dht-write']
 
@@ -174,29 +173,6 @@ const parseStorage = (dir) => {
   return fullPath(dir)
 }
 
-const writeLine = async (path, line) => {
-  const options = { flag: 'a' }
-  const data = line + '\n'
-
-  return fs.promises.writeFile(path, data, options)
-}
-
-const prepareOutputDestination = async (output) => {
-  const path = fullPath(output)
-  const isDirectory = await isDir(path) || isDirPath(output)
-  const dirCreated = isDirectory ? await createDir(path) : await createFileDir(path)
-
-  if (!dirCreated) {
-    throw new Error('ERR_MAKE_OUTPUT_DIR_FAILED')
-  }
-
-  return {
-    demultiplex: isDirectory,
-    path: isDirectory ? path : dirname(path),
-    file: isDirectory ? `hyperlog-${Date.now()}.log` : basename(path)
-  }
-}
-
 const main = async () => {
   const argv = yargs.argv
   const [cmd] = argv._
@@ -210,12 +186,6 @@ const main = async () => {
   if (cmd === 'read') {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
-    const logConsole = argv.output ? argv.console : true
-    const prefixRegExp = argv['remote-prefix'] ? new RegExp(`^${normalize(argv['remote-prefix'])}`) : null
-    const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
-    const include = argv.include ? new RegExp(argv.include) : null
-    const exclude = argv.exclude ? new RegExp(argv.exclude) : null
-
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
     if (typeof argv.end === 'number') streamOpts.end = argv.end
@@ -224,32 +194,11 @@ const main = async () => {
     if (argv.tail === true) streamOpts = { snapshot: false, tail: true }
 
     const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
+    const printer = new LogsPrinter()
 
-    client.on('data', async (data) => {
-      const originLine = data.toString().trimRight()
-      const line = prefixRegExp ? originLine.replace(prefixRegExp, '') : originLine
+    client.on('data', data => printer.print(data.toString()))
 
-      if (include && !line.match(include)) return
-      if (exclude && line.match(exclude)) return
-
-      if (logConsole) console.log(line)
-
-      if (destination) {
-        const { path, content } = HyperCoreFileLogger.parseLine(line)
-
-        if (path && demultiplex) {
-          const outpath = join(destination, path)
-
-          await createFileDir(outpath)
-          await writeLine(outpath, content)
-        } else {
-          const outpath = join(destination, file)
-
-          await writeLine(outpath, line)
-        }
-      }
-    })
-
+    await printer.setup(argv)
     await client.start()
 
     return { client }
