@@ -45,7 +45,7 @@ class LogsPrinter {
 
     if (this.logConsole) console.log(line)
 
-    if (this.destination) {
+    if (destination) {
       const { path, content } = HyperCoreFileLogger.parseLine(line)
 
       if (path && demultiplex) {
