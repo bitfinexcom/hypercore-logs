@@ -7,6 +7,7 @@ const fileLoggerTests = require('./logger.file.test')
 const dhtLoggerTests = require('./dht-logger.test')
 const udpLoggerTests = require('./logger.udp.test')
 const cliTests = require('./cli.test')
+const printerTests = require('./logs-printer.test')
 
 describe('*** Unit testing! ***', () => {
   bisectTests()
@@ -16,4 +17,5 @@ describe('*** Unit testing! ***', () => {
   dhtLoggerTests()
   udpLoggerTests()
   cliTests()
+  printerTests()
 })
