@@ -1,13 +1,8 @@
 'use strict'
 
-const _ = require('lodash')
 const debug = require('debug')('hcore-logger')
-const fs = require('fs')
-const chokidar = require('chokidar')
-const readline = require('readline')
-const { isGlob } = require('./helper')
 const HyperCoreLogger = require('./hypercore-logger')
-const Tail = require('tail').Tail
+const FilesWatcher = require('./files-watcher')
 
 class HyperCoreFileLogger extends HyperCoreLogger {
   /**
@@ -61,103 +56,34 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     this.republish = republish
     this.pathlike = pathlike
 
-    /** @type {Object<string, Tail>} */
-    this.fileTails = {}
-    /** @type {chokidar.FSWatcher | null} */
-    this.watcher = null
-    /** @type {boolean} */
-    this.isReady = false
+    this.watcher = new FilesWatcher(pathlike, republish, this.feedOpts.valueEncoding)
   }
 
   static getFileDelimiter () {
-    return ' >>> '
+    return FilesWatcher.getFileDelimiter()
   }
 
   static parseLine (line) {
-    const delimiter = HyperCoreFileLogger.getFileDelimiter()
-    const [path, ...content] = line.split(delimiter)
-
-    const hasPath = content.length
-
-    return {
-      path: hasPath ? path : null,
-      content: hasPath ? content.join(delimiter) : line
-    }
+    return FilesWatcher.parseLine(line)
   }
 
   static formatLine (line, file = null) {
-    const prefix = file ? file + HyperCoreFileLogger.getFileDelimiter() : ''
-
-    return prefix + line
-  }
-
-  /**
-   * @private
-   * @param {String} file
-   * @param {{ multiple: Boolean, republish: Boolean }} options
-   */
-  async watchFile (file, options) {
-    if (options.republish) {
-      const encoding = this.feedOpts.valueEncoding
-      const rstream = fs.createReadStream(file, { encoding })
-
-      const rl = readline.createInterface({
-        input: rstream,
-        crlfDelay: Infinity
-      })
-
-      for await (const line of rl) {
-        await new Promise((resolve, reject) => {
-          const data = HyperCoreFileLogger.formatLine(line, options.multiple && file) + '\n'
-          this.feed.append(data, (err) => err ? reject(err) : resolve())
-        })
-      }
-    }
-
-    const tail = new Tail(file)
-    tail.on('line', (line) => {
-      const data = HyperCoreFileLogger.formatLine(line, options.multiple && file) + '\n'
-      this.feed.append(data)
-    })
-    tail.watch()
-
-    this.fileTails[file] = tail
-  }
-
-  /**
-   * @private
-   */
-  async unwatchFile (file) {
-    const watcher = this.fileTails[file]
-
-    if (watcher) {
-      watcher.unwatch()
-      delete this.fileTails[file]
-    }
+    return FilesWatcher.formatLine(line, file)
   }
 
   async start () {
     await super.start()
-    this.watcher = chokidar.watch(this.pathlike, {
-      usePolling: true,
-      interval: 300
+    await this.watcher.start()
+
+    this.watcher.on('data', data => {
+      this.feed.append(data)
     })
-
-    this.watcher.on('ready', () => { this.isReady = true })
-    this.watcher.on('add', file => this.watchFile(file, {
-      multiple: isGlob(this.pathlike),
-      republish: this.republish || this.isReady
-    }))
-    this.watcher.on('unlink', file => this.unwatchFile(file))
-
     debug('feed started listening for changes on %s', this.pathlike)
   }
 
   async stop () {
-    _.keys(this.fileTails).forEach(file => this.unwatchFile(file))
-    if (this.watcher) this.watcher.close()
-    this.isReady = false
     await super.stop()
+    await this.watcher.stop()
   }
 }
 
