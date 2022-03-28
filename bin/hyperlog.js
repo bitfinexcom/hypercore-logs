@@ -5,76 +5,78 @@
 process.env.DEBUG = 'hcore-logger'
 
 const fs = require('fs')
-const { join, dirname, basename, normalize } = require('path')
 const ram = require('random-access-memory')
 const pkg = require('../package.json')
 const yargs = require('yargs')
-  .command(
-    'read',
-    'creates a reader for a hypercore log',
-    (y) => y.option('key', {
+
+const setCommonReadOptions = y => y
+  .option('output', {
+    type: 'string',
+    alias: 'o',
+    description: 'log output directory or file, if not provided output ' +
+        'will be logged to console.'
+  })
+  .option('remote-prefix', {
+    type: 'string',
+    alias: 'rp',
+    description: 'path prefix to be omitted'
+  })
+  .option('console', {
+    type: 'boolean',
+    alias: 'c',
+    description: 'log output to console, if output provided and console ' +
+        'ommited then output would be logged only in file!'
+  })
+  .option('include', {
+    type: 'string',
+    desc: 'filter logs by Regular expression'
+  })
+  .option('exclude', {
+    type: 'string',
+    desc: 'exclude logs by Regular expression, can be used along with "include" option'
+  })
+
+yargs.command(
+  'read',
+  'creates a reader for a hypercore log',
+  (y) => setCommonReadOptions(y).option('key', {
+    type: 'string',
+    alias: 'k',
+    demandOption: true,
+    description: 'feed public key, use either hex string or path to file'
+  })
+    .option('datadir', {
       type: 'string',
-      alias: 'k',
-      demandOption: true,
-      description: 'feed public key, use either hex string or path to file'
+      alias: 'd',
+      description: 'feed data directory, if ommited RAM memory will be used'
     })
-      .option('datadir', {
-        type: 'string',
-        alias: 'd',
-        description: 'feed data directory, if ommited RAM memory will be used'
-      })
-      .option('output', {
-        type: 'string',
-        alias: 'o',
-        description: 'log output directory or file, if not provided output ' +
-          'will be logged to console.'
-      })
-      .option('remote-prefix', {
-        type: 'string',
-        alias: 'rp',
-        description: 'path prefix to be omitted'
-      })
-      .option('console', {
-        type: 'boolean',
-        alias: 'c',
-        description: 'log output to console, if output provided and console ' +
-          'ommited then output would be logged only in file!'
-      })
-      .option('tail', {
-        type: 'boolean',
-        description: 'tail the log file'
-      })
-      .option('start', {
-        type: 'number',
-        desc: 'feed read start, ignored in case if tail is specified, ' +
+    .option('tail', {
+      type: 'boolean',
+      description: 'tail the log file'
+    })
+    .option('start', {
+      type: 'number',
+      desc: 'feed read start, ignored in case if tail is specified, ' +
           'if negative it\'s considered from feed end'
-      })
-      .option('end', {
-        type: 'number',
-        desc: 'feed read end, ignored in case if tail is specified, ' +
+    })
+    .option('end', {
+      type: 'number',
+      desc: 'feed read end, ignored in case if tail is specified, ' +
           'if negative it\'s considered from feed end'
-      })
-      .option('start-date', {
-        type: 'string',
-        desc: 'feed read start by date, ignored in case if start is specified'
-      })
-      .option('end-date', {
-        type: 'string',
-        desc: 'feed read end by date, ignored in case if end is specified'
-      })
-      .option('include', {
-        type: 'string',
-        desc: 'filter logs by Regular expression'
-      })
-      .option('exclude', {
-        type: 'string',
-        desc: 'exclude logs by Regular expression, can be used along with "include" option'
-      })
-  )
+    })
+    .option('start-date', {
+      type: 'string',
+      desc: 'feed read start by date, ignored in case if start is specified'
+    })
+    .option('end-date', {
+      type: 'string',
+      desc: 'feed read end by date, ignored in case if end is specified'
+    })
+)
   .command(
     'dht-read',
     'creates a reader for a hyperswarm log',
-    (y) => y.option('key', {
+    (y) => setCommonReadOptions(y).option('key', {
       type: 'string',
       alias: 'k',
       demandOption: true,
@@ -143,11 +145,10 @@ const yargs = require('yargs')
   .help()
 
 const {
-  HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger, HyperSwarmDHTLogReader, HyperSwarmDHTLogger
+  HyperCoreLogReader, HyperCoreFileLogger, HyperCoreUdpLogger, HyperSwarmDHTLogReader,
+  HyperSwarmDHTLogger, LogsPrinter
 } = require('../')
-const {
-  createDir, createFileDir, fullPath, isHexStr, isDir, isDirPath
-} = require('../src/helper')
+const { fullPath, isHexStr } = require('../src/helper')
 
 const cmds = ['read', 'write', 'dht-read', 'dht-write']
 
@@ -174,29 +175,6 @@ const parseStorage = (dir) => {
   return fullPath(dir)
 }
 
-const writeLine = async (path, line) => {
-  const options = { flag: 'a' }
-  const data = line + '\n'
-
-  return fs.promises.writeFile(path, data, options)
-}
-
-const prepareOutputDestination = async (output) => {
-  const path = fullPath(output)
-  const isDirectory = await isDir(path) || isDirPath(output)
-  const dirCreated = isDirectory ? await createDir(path) : await createFileDir(path)
-
-  if (!dirCreated) {
-    throw new Error('ERR_MAKE_OUTPUT_DIR_FAILED')
-  }
-
-  return {
-    demultiplex: isDirectory,
-    path: isDirectory ? path : dirname(path),
-    file: isDirectory ? `hyperlog-${Date.now()}.log` : basename(path)
-  }
-}
-
 const main = async () => {
   const argv = yargs.argv
   const [cmd] = argv._
@@ -210,12 +188,6 @@ const main = async () => {
   if (cmd === 'read') {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
-    const logConsole = argv.output ? argv.console : true
-    const prefixRegExp = argv['remote-prefix'] ? new RegExp(`^${normalize(argv['remote-prefix'])}`) : null
-    const { path: destination, file, demultiplex } = argv.output ? await prepareOutputDestination(argv.output) : {}
-    const include = argv.include ? new RegExp(argv.include) : null
-    const exclude = argv.exclude ? new RegExp(argv.exclude) : null
-
     let streamOpts = {}
     if (typeof argv.start === 'number') streamOpts.start = argv.start
     if (typeof argv.end === 'number') streamOpts.end = argv.end
@@ -224,32 +196,11 @@ const main = async () => {
     if (argv.tail === true) streamOpts = { snapshot: false, tail: true }
 
     const client = new HyperCoreLogReader(storage, key, null, null, streamOpts)
+    const printer = new LogsPrinter()
 
-    client.on('data', async (data) => {
-      const originLine = data.toString().trimRight()
-      const line = prefixRegExp ? originLine.replace(prefixRegExp, '') : originLine
+    client.on('data', data => printer.print(data.toString()))
 
-      if (include && !line.match(include)) return
-      if (exclude && line.match(exclude)) return
-
-      if (logConsole) console.log(line)
-
-      if (destination) {
-        const { path, content } = HyperCoreFileLogger.parseLine(line)
-
-        if (path && demultiplex) {
-          const outpath = join(destination, path)
-
-          await createFileDir(outpath)
-          await writeLine(outpath, content)
-        } else {
-          const outpath = join(destination, file)
-
-          await writeLine(outpath, line)
-        }
-      }
-    })
-
+    await printer.setup(argv)
     await client.start()
 
     return { client }
@@ -259,10 +210,12 @@ const main = async () => {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
     const client = new HyperSwarmDHTLogReader(key)
+    const printer = new LogsPrinter()
 
-    client.on('data', console.log)
+    client.on('data', data => printer.print(data))
     client.on('error', () => client.stop())
 
+    await printer.setup(argv)
     await client.start()
 
     return { client }

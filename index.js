@@ -6,6 +6,7 @@ const HyperCoreLogReader = require('./src/hypercore-log-reader')
 const HyperCoreUdpLogger = require('./src/hypercore-udp-logger')
 const HyperSwarmDHTLogger = require('./src/hyperswarm-dht-logger')
 const HyperSwarmDHTLogReader = require('./src/hyperswarm-dht-log-reader')
+const LogsPrinter = require('./src/logs-printer')
 
 module.exports = {
   HyperCoreFileLogger,
@@ -13,5 +14,6 @@ module.exports = {
   HyperCoreLogReader,
   HyperCoreUdpLogger,
   HyperSwarmDHTLogger,
-  HyperSwarmDHTLogReader
+  HyperSwarmDHTLogReader,
+  LogsPrinter
 }
