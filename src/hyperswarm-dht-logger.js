@@ -3,23 +3,23 @@
 const debug = require('debug')('hcore-logger')
 const DHT = require('@hyperswarm/dht')
 const uuid = require('uuid')
-const Tail = require('tail').Tail
+const FilesWatcher = require('./files-watcher')
 
 const CRYPTO_SIGN_SEEDBYTES = 32
 
 class HyperSwarmDHTLogger {
   /**
-   * @param {string} file
+   * @param {string} pathlike File path or glob pattern that will be tailed
    * @param {string|null} seed
    */
-  constructor (file, seed = null) {
-    this.file = file
+  constructor (pathlike, seed = null) {
+    this.pathlike = pathlike
     this.seed = seed && Buffer.allocUnsafe(CRYPTO_SIGN_SEEDBYTES).fill(seed)
 
     this.sockets = new Map()
     this.node = null
     this.sever = null
-    this.fileWatcher = null
+    this.watcher = new FilesWatcher(pathlike, false)
   }
 
   async start () {
@@ -51,13 +51,13 @@ class HyperSwarmDHTLogger {
 
     await this.server.listen(keyPair)
 
-    this.fileWatcher = new Tail(this.file)
-    this.fileWatcher.on('line', (line) => {
+    this.watcher.on('data', data => {
       for (const socket of this.sockets.values()) {
-        socket.write(line)
+        socket.write(data)
       }
     })
-    this.fileWatcher.watch()
+
+    await this.watcher.start()
   }
 
   addSocket (id, socket) {
@@ -78,7 +78,7 @@ class HyperSwarmDHTLogger {
     Array.from(this.sockets.keys()).forEach(id => this.removeSocket(id))
     await this.server.close()
     await this.node.destroy()
-    this.fileWatcher.unwatch()
+    await this.watcher.stop()
     debug('writer closed')
   }
 }
