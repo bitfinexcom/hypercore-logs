@@ -10,9 +10,9 @@ class FilesWatcher extends EventEmitter {
   /**
    * @param {string} pathlike File path or glob pattern that will be tailed
    * @param {boolean} republish Republish entire file at watch start
-   * @param {string} encoding
+   * @param {string} [encoding]
    */
-  constructor (pathlike, republish, encoding) {
+  constructor (pathlike, republish, encoding = 'utf-8') {
     super()
     this.pathlike = pathlike
     this.republish = republish
@@ -68,7 +68,7 @@ class FilesWatcher extends EventEmitter {
       }
     }
 
-    const tail = new Tail(file)
+    const tail = new Tail(file, { encoding: this.encoding })
     tail.on('line', (line) => {
       const data = FilesWatcher.formatLine(line, options.multiple && file) + '\n'
       this.emit('data', data)
