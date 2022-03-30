@@ -1,3 +1,5 @@
+'use strict'
+
 const fs = require('fs')
 const { join, dirname, basename, normalize } = require('path')
 const { createDir, createFileDir, fullPath, isDir, isDirPath } = require('../src/helper')
