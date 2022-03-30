@@ -118,10 +118,19 @@ hyperlog dht-read
 creates a reader for a hyperswarm log
 
 Options:
-      --version  Show version number                                   [boolean]
-      --help     Show help                                             [boolean]
+      --version              Show version number                             [boolean]
+      --help                 Show help                                       [boolean]
+      -o, --output           log output directory or file, if not provided
+                             output will be logged to console.               [string]
+      --remote-prefix, --rp  path prefix to be omitted                       [string]
+      -c, --console          log output to console, if output provided and
+                             console ommited then output would be logged
+                             only in file!                                   [boolean]
+      --include              filter logs by Regular expression               [string]
+      --exclude              exclude logs by Regular expression, can be used
+                             along with "include" option                     [string]
   -k, --key      feed public key, use either hex string or path to file
-                                                             [string] [required]
+                                                                             [string] [required]
 ```
 
 ## Examples
