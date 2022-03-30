@@ -191,29 +191,5 @@ module.exports = () => {
 
       expect(databuff.length).to.be.equal(2)
     }).timeout(120000)
-
-    it('parse simple line', () => {
-      const line = 'some data'
-      const { path, content } = HyperCoreFileLogger.parseLine(line)
-
-      expect(path).to.be.null()
-      expect(content).to.equal(line)
-    })
-
-    it('parse line with path', () => {
-      const line = '/foo/bar/file.log >>> some data'
-      const { path, content } = HyperCoreFileLogger.parseLine(line)
-
-      expect(path).to.equal('/foo/bar/file.log')
-      expect(content).to.equal('some data')
-    })
-
-    it('parse line with path and multiple delimiters', () => {
-      const line = '/foo/bar/file.log >>> some data >>> any data'
-      const { path, content } = HyperCoreFileLogger.parseLine(line)
-
-      expect(path).to.equal('/foo/bar/file.log')
-      expect(content).to.equal('some data >>> any data')
-    })
   })
 }
