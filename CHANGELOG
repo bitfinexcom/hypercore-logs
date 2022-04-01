@@ -1,3 +1,7 @@
+# 1.2.0
+- feature: add support for watching multiple files to hyperswarm dht logger
+- feature: add support for storing logs on file to hyperswarm dht log reader
+
 # 1.1.0
 - feature: add hyperswarm dht logger & reader
 - chore: dht logger tests
