@@ -138,6 +138,11 @@ yargs.command(
         default: null,
         desc: 'Key pair\'s seed'
       })
+      .option('republish', {
+        type: 'boolean',
+        default: false,
+        desc: 'republish entire file to the stream'
+      })
   )
   .demandCommand()
   .recommendCommands()
@@ -247,7 +252,7 @@ const main = async () => {
 
   if (cmd === 'dht-write') {
     if (!argv.file) throw new Error('ERR_FILE_MISSING')
-    const feed = new HyperSwarmDHTLogger(argv.file, argv.seed)
+    const feed = new HyperSwarmDHTLogger(argv.file, argv.seed, argv.republish)
 
     await feed.start()
     return { feed }
