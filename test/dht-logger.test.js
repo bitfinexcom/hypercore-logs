@@ -90,5 +90,40 @@ module.exports = () => {
         `${path.join(tmpDir, 'temp3.log')} >>> test\n`
       ])
     }).timeout(1200000)
+
+    it('logger should republish', async () => {
+      const databuff = []
+      const filename = path.join(tmpDir, 'temp.log')
+      const push = () => fs.writeFile(
+        filename, 'test\n', { encoding: 'utf-8', flag: 'a' }
+      )
+
+      await push() // create file if not exists
+      push()
+
+      const server = new HyperSwarmDHTLogger(filename, 1, true)
+
+      await server.start()
+      push()
+
+      const client = new HyperSwarmDHTLogReader(server.feedKey)
+
+      client.on('data', (data) => { databuff.push(data) })
+
+      await sleep(500)
+      await client.start()
+      await sleep(3000)
+
+      push()
+      push()
+      await sleep(500)
+
+      await Promise.all([
+        server.stop(),
+        client.stop()
+      ])
+
+      expect(databuff.length).to.be.eq(5)
+    }).timeout(1200000)
   })
 }
