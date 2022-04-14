@@ -11,14 +11,13 @@ const Tail = require('tail').Tail
 class FilesWatcher extends EventEmitter {
   /**
    * @param {string} pathlike File path or glob pattern that will be tailed
-   * @param {boolean} republish Republish entire file at watch start
    * @param {string} [encoding]
    */
-  constructor (pathlike, republish, encoding = 'utf-8') {
+  constructor (pathlike, encoding = 'utf-8') {
     super()
     this.pathlike = pathlike
-    this.republish = republish
     this.encoding = encoding
+    this.multiple = isGlob(this.pathlike)
 
     /** @type {Object<string, Tail>} */
     this.fileTails = {}
@@ -26,6 +25,10 @@ class FilesWatcher extends EventEmitter {
     this.watcher = null
     /** @type {boolean} */
     this.isReady = false
+  }
+
+  get files () {
+    return Object.keys(this.fileTails)
   }
 
   static getFileDelimiter () {
@@ -51,29 +54,39 @@ class FilesWatcher extends EventEmitter {
   }
 
   /**
-   * @private
    * @param {String} file
-   * @param {{ multiple: Boolean, republish: Boolean }} options
    */
-  async watchFile (file, options) {
-    if (options.republish) {
-      const rstream = fs.createReadStream(file, { encoding: this.encoding })
+  readFile (file) {
+    const { multiple } = this
+    const rstream = fs.createReadStream(file, { encoding: this.encoding })
+    const rl = readline.createInterface({
+      input: rstream,
+      crlfDelay: Infinity
+    })
 
-      const rl = readline.createInterface({
-        input: rstream,
-        crlfDelay: Infinity
-      })
-
-      for await (const line of rl) {
-        const data = FilesWatcher.formatLine(line, options.multiple && file) + '\n'
-        this.emit('data', data)
+    return {
+      [Symbol.asyncIterator]: async function * () {
+        for await (const line of rl) {
+          yield FilesWatcher.formatLine(line, multiple && file) + '\n'
+        }
       }
     }
+  }
 
+  /**
+   * @private
+   * @param {String} file
+   */
+  async watchFile (file) {
+    if (this.isReady) {
+      for await (const line of this.readFile(file)) {
+        this.emit('data', line) // republish new files
+      }
+    }
     const tail = new Tail(file, { encoding: this.encoding })
     tail.on('line', (line) => {
-      const data = FilesWatcher.formatLine(line, options.multiple && file) + '\n'
-      this.emit('data', data)
+      const data = FilesWatcher.formatLine(line, this.multiple && file) + '\n'
+      this.emit('data', data, file)
     })
     tail.watch()
 
@@ -102,11 +115,8 @@ class FilesWatcher extends EventEmitter {
       this.isReady = true
       this.emit('ready')
     })
-    this.watcher.on('add', file => {
-      this.watchFile(file, {
-        multiple: isGlob(this.pathlike),
-        republish: this.republish || this.isReady
-      })
+    this.watcher.on('add', async file => {
+      this.watchFile(file)
       this.emit('add', file)
     })
     this.watcher.on('unlink', file => {

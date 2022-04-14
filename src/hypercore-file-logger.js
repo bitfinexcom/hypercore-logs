@@ -56,7 +56,7 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     this.republish = republish
     this.pathlike = pathlike
 
-    this.watcher = new FilesWatcher(pathlike, republish, this.feedOpts.valueEncoding)
+    this.watcher = new FilesWatcher(pathlike, this.feedOpts.valueEncoding)
   }
 
   static getFileDelimiter () {
@@ -73,11 +73,31 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
   async start () {
     await super.start()
-    await this.watcher.start()
 
-    this.watcher.on('data', data => {
-      this.feed.append(data)
-    })
+    if (this.republish) {
+      const republished = new Set([])
+
+      this.watcher.on('data', (data, file) => {
+        if (republished.has(file)) {
+          this.feed.append(data)
+        }
+      })
+      this.watcher.on('add', async (file) => {
+        for await (const line of this.watcher.readFile(file)) {
+          this.feed.append(line)
+        }
+        republished.add(file)
+      })
+      this.watcher.on('unlink', file => {
+        republished.delete(file)
+      })
+    } else {
+      this.watcher.on('data', data => {
+        this.feed.append(data)
+      })
+    }
+
+    await this.watcher.start()
     debug('feed started listening for changes on %s', this.pathlike)
   }
 

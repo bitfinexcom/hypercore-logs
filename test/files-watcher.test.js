@@ -80,7 +80,7 @@ module.exports = () => {
       )
       await push('temp1.log') // create file
 
-      const watcher = new FilesWatcher(path.join(tmpDir, '*.log'), false)
+      const watcher = new FilesWatcher(path.join(tmpDir, '*.log'))
 
       watcher.on('data', data => databuff.push(data))
 

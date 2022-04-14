@@ -20,22 +20,18 @@ class HyperSwarmDHTLogger {
     this.sockets = new Map()
     this.node = null
     this.sever = null
-    this.watcher = new FilesWatcher(pathlike, republish)
-    this.storage = []
+    this.watcher = new FilesWatcher(pathlike)
   }
 
   async start () {
     this.node = new DHT()
     this.server = this.node.createServer()
 
-    this.server.on('connection', socket => {
+    this.server.on('connection', async socket => {
       const id = uuid.v4()
       debug('socket %s connected', id)
       this.addSocket(id, socket)
 
-      if (this.republish) {
-        this.storage.forEach(data => socket.write(data))
-      }
       socket.on('error', error => {
         debug('socket %s connection %s', id, error)
         this.removeSocket(id)
@@ -46,6 +42,27 @@ class HyperSwarmDHTLogger {
         this.removeSocket(id)
         debug('socket %s ended', id)
       })
+
+      if (this.republish) {
+        const published = new Set([])
+
+        this.watcher.on('data', (data, file) => {
+          if (published.has(file)) {
+            socket.write(data)
+          }
+        })
+
+        await Promise.all(this.watcher.files.map(async file => {
+          for await (const line of this.watcher.readFile(file)) {
+            socket.write(line)
+          }
+          published.add(file)
+        }))
+      } else {
+        this.watcher.on('data', data => {
+          socket.write(data)
+        })
+      }
     })
 
     const keyPair = DHT.keyPair(this.seed)
@@ -55,15 +72,6 @@ class HyperSwarmDHTLogger {
     debug('secret-key: %s', keyPair.secretKey.toString('hex'))
 
     await this.server.listen(keyPair)
-
-    this.watcher.on('data', data => {
-      if (this.republish) {
-        this.storage.push(data)
-      }
-      for (const socket of this.sockets.values()) {
-        socket.write(data)
-      }
-    })
 
     await this.watcher.start()
   }
