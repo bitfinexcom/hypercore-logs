@@ -51,13 +51,21 @@ class HyperSwarmDHTLogger {
             socket.write(data)
           }
         })
-
         await Promise.all(this.watcher.files.map(async file => {
           for await (const line of this.watcher.readFile(file)) {
             socket.write(line)
           }
           published.add(file)
         }))
+        this.watcher.on('add', async (file) => {
+          for await (const line of this.watcher.readFile(file)) {
+            socket.write(line)
+          }
+          published.add(file)
+        })
+        this.watcher.on('unlink', file => {
+          published.delete(file)
+        })
       } else {
         this.watcher.on('data', data => {
           socket.write(data)
