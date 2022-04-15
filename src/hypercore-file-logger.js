@@ -75,21 +75,27 @@ class HyperCoreFileLogger extends HyperCoreLogger {
     await super.start()
 
     if (this.republish) {
-      const republished = new Set([])
+      const published = new Set([])
 
       this.watcher.on('data', (data, file) => {
-        if (republished.has(file)) {
+        if (published.has(file)) {
           this.feed.append(data)
         }
       })
+      await Promise.all(this.watcher.files.map(async file => {
+        for await (const line of this.watcher.readFile(file)) {
+          this.feed.append(line)
+        }
+        published.add(file)
+      }))
       this.watcher.on('add', async (file) => {
         for await (const line of this.watcher.readFile(file)) {
           this.feed.append(line)
         }
-        republished.add(file)
+        published.add(file)
       })
       this.watcher.on('unlink', file => {
-        republished.delete(file)
+        published.delete(file)
       })
     } else {
       this.watcher.on('data', data => {
