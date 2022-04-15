@@ -73,29 +73,11 @@ class HyperCoreFileLogger extends HyperCoreLogger {
 
   async start () {
     await super.start()
+    await this.watcher.start()
 
     if (this.republish) {
-      const published = new Set([])
-
-      this.watcher.on('data', (data, file) => {
-        if (published.has(file)) {
-          this.feed.append(data)
-        }
-      })
-      await Promise.all(this.watcher.files.map(async file => {
-        for await (const line of this.watcher.readFile(file)) {
-          this.feed.append(line)
-        }
-        published.add(file)
-      }))
-      this.watcher.on('add', async (file) => {
-        for await (const line of this.watcher.readFile(file)) {
-          this.feed.append(line)
-        }
-        published.add(file)
-      })
-      this.watcher.on('unlink', file => {
-        published.delete(file)
+      await this.watcher.fetch(data => {
+        this.feed.append(data)
       })
     } else {
       this.watcher.on('data', data => {
@@ -103,7 +85,6 @@ class HyperCoreFileLogger extends HyperCoreLogger {
       })
     }
 
-    await this.watcher.start()
     debug('feed started listening for changes on %s', this.pathlike)
   }
 

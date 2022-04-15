@@ -44,27 +44,8 @@ class HyperSwarmDHTLogger {
       })
 
       if (this.republish) {
-        const published = new Set([])
-
-        this.watcher.on('data', (data, file) => {
-          if (published.has(file)) {
-            socket.write(data)
-          }
-        })
-        await Promise.all(this.watcher.files.map(async file => {
-          for await (const line of this.watcher.readFile(file)) {
-            socket.write(line)
-          }
-          published.add(file)
-        }))
-        this.watcher.on('add', async (file) => {
-          for await (const line of this.watcher.readFile(file)) {
-            socket.write(line)
-          }
-          published.add(file)
-        })
-        this.watcher.on('unlink', file => {
-          published.delete(file)
+        await this.watcher.fetch(data => {
+          socket.write(data)
         })
       } else {
         this.watcher.on('data', data => {

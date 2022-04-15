@@ -105,6 +105,35 @@ class FilesWatcher extends EventEmitter {
     }
   }
 
+  /**
+   * Fetch all the data, then watch tail
+   * @param {Function} listener
+   */
+  async fetch (listener) {
+    const published = new Set([])
+
+    this.on('data', (data, file) => {
+      if (published.has(file)) {
+        listener(data)
+      }
+    })
+    await Promise.all(this.files.map(async file => {
+      for await (const line of this.readFile(file)) {
+        listener(line)
+      }
+      published.add(file)
+    }))
+    this.on('add', async (file) => {
+      for await (const line of this.readFile(file)) {
+        listener(line)
+      }
+      published.add(file)
+    })
+    this.on('unlink', file => {
+      published.delete(file)
+    })
+  }
+
   async start () {
     this.watcher = chokidar.watch(this.pathlike, {
       usePolling: true,
