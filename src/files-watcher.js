@@ -67,7 +67,7 @@ class FilesWatcher extends EventEmitter {
     return {
       [Symbol.asyncIterator]: async function * () {
         for await (const line of rl) {
-          yield FilesWatcher.formatLine(line, multiple && file) + '\n'
+          yield FilesWatcher.formatLine(line, multiple && file)
         }
       }
     }
@@ -85,7 +85,7 @@ class FilesWatcher extends EventEmitter {
     }
     const tail = new Tail(file, { encoding: this.encoding })
     tail.on('line', (line) => {
-      const data = FilesWatcher.formatLine(line, this.multiple && file) + '\n'
+      const data = FilesWatcher.formatLine(line, this.multiple && file)
       this.emit('data', data, file)
     })
     tail.watch()

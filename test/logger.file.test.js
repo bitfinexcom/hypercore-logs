@@ -82,8 +82,8 @@ module.exports = () => {
       ])
 
       expect(databuff.length).to.be.eq(2)
-      expect(databuff[0]).to.be.equal('test3\n')
-      expect(databuff[1]).to.be.equal('test4\n')
+      expect(databuff[0]).to.be.equal('test3')
+      expect(databuff[1]).to.be.equal('test4')
     }).timeout(1200000)
 
     it('file logger should push data from dir to the reader', async () => {

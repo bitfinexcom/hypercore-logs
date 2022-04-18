@@ -68,8 +68,8 @@ module.exports = () => {
       await watcher.stop()
 
       expect(databuff).to.eql([
-        `${path.join(tmpDir, 'temp1.log')} >>> test\n`,
-        `${path.join(tmpDir, 'temp2.log')} >>> test\n`
+        `${path.join(tmpDir, 'temp1.log')} >>> test`,
+        `${path.join(tmpDir, 'temp2.log')} >>> test`
       ])
     }).timeout(12000)
 
