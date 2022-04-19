@@ -66,7 +66,7 @@ module.exports = () => {
       expect(console.log).to.be.calledTwice()
       expect(console.log).to.be.calledWith('some data 1')
       expect(console.log).to.be.calledWith('some data 2')
-    }).timeout(12000)
+    }).timeout(120000)
 
     it('should exclude logs by regexp', async () => {
       const push = (i) => server.feed.append('some data ' + i)
@@ -106,6 +106,6 @@ module.exports = () => {
       expect(console.log).to.be.callCount(4)
       expect(console.log).to.be.calledWith('/foosome data')
       expect(console.log).to.be.calledWith('some data')
-    }).timeout(12000)
+    }).timeout(120000)
   })
 }
