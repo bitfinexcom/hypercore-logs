@@ -8,10 +8,11 @@ class HyperSwarmDHTLogReader extends EventEmitter {
   /**
    * @param {string} feedKey
    */
-  constructor (feedKey) {
+  constructor (feedKey, streamOpts = {}) {
     super()
 
     this.feedKey = feedKey
+    this.streamOpts = streamOpts
     this.node = null
     this.socket = null
   }
@@ -21,6 +22,7 @@ class HyperSwarmDHTLogReader extends EventEmitter {
     this.socket = this.node.connect(Buffer.from(this.feedKey, 'hex'))
 
     this.socket.on('open', () => {
+      this.socket.write(JSON.stringify({ command: 'fetch', options: this.streamOpts }))
       debug('socket fully open with the other peer')
     })
 

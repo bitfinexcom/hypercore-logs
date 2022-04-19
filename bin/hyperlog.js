@@ -35,6 +35,14 @@ const setCommonReadOptions = y => y
     type: 'string',
     desc: 'exclude logs by Regular expression, can be used along with "include" option'
   })
+  .option('start-date', {
+    type: 'string',
+    desc: 'feed read start by date, ignored in case if start is specified'
+  })
+  .option('end-date', {
+    type: 'string',
+    desc: 'feed read end by date, ignored in case if end is specified'
+  })
 
 yargs.command(
   'read',
@@ -63,14 +71,6 @@ yargs.command(
       type: 'number',
       desc: 'feed read end, ignored in case if tail is specified, ' +
           'if negative it\'s considered from feed end'
-    })
-    .option('start-date', {
-      type: 'string',
-      desc: 'feed read start by date, ignored in case if start is specified'
-    })
-    .option('end-date', {
-      type: 'string',
-      desc: 'feed read end by date, ignored in case if end is specified'
     })
 )
   .command(
@@ -214,7 +214,11 @@ const main = async () => {
   if (cmd === 'dht-read') {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
-    const client = new HyperSwarmDHTLogReader(key)
+    const streamOpts = {}
+    if (argv['start-date']) streamOpts.startDate = new Date(argv['start-date'])
+    if (argv['end-date']) streamOpts.endDate = new Date(argv['end-date'])
+
+    const client = new HyperSwarmDHTLogReader(key, streamOpts)
     const printer = new LogsPrinter()
 
     client.on('data', data => printer.print(data))
