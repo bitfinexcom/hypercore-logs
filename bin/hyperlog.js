@@ -35,14 +35,6 @@ const setCommonReadOptions = y => y
     type: 'string',
     desc: 'exclude logs by Regular expression, can be used along with "include" option'
   })
-  .option('start-date', {
-    type: 'string',
-    desc: 'feed read start by date, ignored in case if start is specified'
-  })
-  .option('end-date', {
-    type: 'string',
-    desc: 'feed read end by date, ignored in case if end is specified'
-  })
 
 yargs.command(
   'read',
@@ -72,6 +64,14 @@ yargs.command(
       desc: 'feed read end, ignored in case if tail is specified, ' +
           'if negative it\'s considered from feed end'
     })
+    .option('start-date', {
+      type: 'string',
+      desc: 'feed read start by date, ignored in case if start is specified'
+    })
+    .option('end-date', {
+      type: 'string',
+      desc: 'feed read end by date, ignored in case if end is specified'
+    })
 )
   .command(
     'dht-read',
@@ -82,6 +82,14 @@ yargs.command(
       demandOption: true,
       description: 'feed public key, use either hex string or path to file'
     })
+      .option('start-date', {
+        type: 'string',
+        desc: 'feed read start by date'
+      })
+      .option('end-date', {
+        type: 'string',
+        desc: 'feed read end by date'
+      })
   )
   .command(
     'write',
