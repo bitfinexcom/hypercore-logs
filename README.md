@@ -131,6 +131,8 @@ Options:
                              along with "include" option                     [string]
   -k, --key      feed public key, use either hex string or path to file
                                                                              [string] [required]
+      --start-date           feed read start by date                         [string]
+      --end-date             feed read end by date                           [string]
 ```
 
 ## Examples
