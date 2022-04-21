@@ -275,7 +275,7 @@ module.exports = () => {
       ])
     }).timeout(1200000)
 
-    it('aaa filter multiline logs by date', async () => {
+    it('filter multiline logs by date', async () => {
       const databuff = []
       const filename = path.join(tmpDir, 'temp.log')
       const push = (date) => fs.writeFile(
