@@ -225,6 +225,8 @@ const main = async () => {
     const streamOpts = {}
     if (argv['start-date']) streamOpts.startDate = new Date(argv['start-date'])
     if (argv['end-date']) streamOpts.endDate = new Date(argv['end-date'])
+    if (argv.include) streamOpts.include = argv.include
+    if (argv.exclude) streamOpts.exclude = argv.exclude
 
     const client = new HyperSwarmDHTLogReader(key, streamOpts)
     const printer = new LogsPrinter()
