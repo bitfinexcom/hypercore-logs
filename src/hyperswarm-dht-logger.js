@@ -133,7 +133,6 @@ class HyperSwarmDHTLogger {
   }
 
   async stop () {
-    this.storage = []
     Array.from(this.sockets.keys()).forEach(id => this.removeSocket(id))
     await this.server.close()
     await this.node.destroy()
