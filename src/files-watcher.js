@@ -80,7 +80,7 @@ class FilesWatcher extends EventEmitter {
   async watchFile (file) {
     if (this.isReady) {
       for await (const line of this.readFile(file)) {
-        this.emit('data', line) // republish new files
+        this.emit('data', line, file) // republish new files
       }
     }
     const tail = new Tail(file, { encoding: this.encoding })
