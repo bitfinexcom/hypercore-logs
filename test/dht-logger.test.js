@@ -110,9 +110,9 @@ module.exports = () => {
 
       client.on('data', (data) => { databuff.push(data) })
 
-      await sleep(500)
+      await sleep(1000)
       await client.start()
-      await sleep(3000)
+      await sleep(5000)
 
       push()
       push()
@@ -150,9 +150,9 @@ module.exports = () => {
 
       client.on('data', (data) => { databuff.push(data.toString()) })
 
-      await sleep(1500)
+      await sleep(1000)
       await client.start()
-      await sleep(3000)
+      await sleep(5000)
 
       await Promise.all([
         server.stop(),
@@ -189,9 +189,9 @@ module.exports = () => {
       })
       client.on('data', (data) => { databuff.push(data.toString()) })
 
-      await sleep(1500)
+      await sleep(1000)
       await client.start()
-      await sleep(3000)
+      await sleep(5000)
 
       await Promise.all([
         server.stop(),
@@ -221,9 +221,9 @@ module.exports = () => {
       const client = new HyperSwarmDHTLogReader(server.feedKey, { startDate: new Date('1970-01-01T00:15:00.000Z') })
       client.on('data', (data) => { databuff.push(data.toString()) })
 
-      await sleep(1500)
+      await sleep(1000)
       await client.start()
-      await sleep(3000)
+      await sleep(5000)
 
       await Promise.all([
         server.stop(),
@@ -258,9 +258,9 @@ module.exports = () => {
       const client = new HyperSwarmDHTLogReader(server.feedKey, { endDate: new Date('1970-01-01T00:35:00.000Z') })
       client.on('data', (data) => { databuff.push(data.toString()) })
 
-      await sleep(1500)
+      await sleep(1000)
       await client.start()
-      await sleep(3000)
+      await sleep(5000)
 
       await Promise.all([
         server.stop(),
@@ -307,9 +307,9 @@ module.exports = () => {
       })
       client.on('data', (data) => { databuff.push(data.toString()) })
 
-      await sleep(1500)
+      await sleep(1000)
       await client.start()
-      await sleep(3000)
+      await sleep(5000)
 
       await Promise.all([
         server.stop(),
