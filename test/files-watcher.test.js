@@ -71,7 +71,7 @@ module.exports = () => {
         `${path.join(tmpDir, 'temp1.log')} >>> test`,
         `${path.join(tmpDir, 'temp2.log')} >>> test`
       ])
-    }).timeout(12000)
+    }).timeout(120000)
 
     it('watches new files', async () => {
       const databuff = []
@@ -94,6 +94,6 @@ module.exports = () => {
       await watcher.stop()
 
       expect(databuff.length).to.be.equal(2)
-    }).timeout(12000)
+    }).timeout(120000)
   })
 }
