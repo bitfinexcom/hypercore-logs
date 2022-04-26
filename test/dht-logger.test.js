@@ -32,8 +32,8 @@ module.exports = () => {
       const server = new HyperSwarmDHTLogger(filename)
 
       await server.start()
-      push()
-      push()
+      await push()
+      await push()
 
       const client = new HyperSwarmDHTLogReader(server.feedKey)
 
@@ -41,10 +41,10 @@ module.exports = () => {
 
       await sleep(500)
       await client.start()
-      await sleep(3000)
+      await sleep(2000)
 
-      push()
-      push()
+      await push()
+      await push()
       await sleep(500)
 
       await Promise.all([
@@ -72,11 +72,11 @@ module.exports = () => {
 
       await sleep(500)
       await client.start()
-      await sleep(3000)
+      await sleep(2000)
 
-      push('temp1.log')
-      push('temp2.log')
-      push('temp3.log')
+      await push('temp1.log')
+      await push('temp2.log')
+      await push('temp3.log')
       await sleep(500)
 
       await Promise.all([
@@ -99,12 +99,12 @@ module.exports = () => {
       )
 
       await push() // create file if not exists
-      push()
+      await push()
 
       const server = new HyperSwarmDHTLogger(filename, 1, true)
 
       await server.start()
-      push()
+      await push()
 
       const client = new HyperSwarmDHTLogReader(server.feedKey)
 
@@ -112,10 +112,10 @@ module.exports = () => {
 
       await sleep(1000)
       await client.start()
-      await sleep(5000)
+      await sleep(2000)
 
-      push()
-      push()
+      await push()
+      await push()
       await sleep(500)
 
       await Promise.all([
@@ -132,12 +132,12 @@ module.exports = () => {
       const push = (date) => fs.writeFile(
         filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
       )
-      push('1970-01-01T00:00:00.000Z')
-      push('1970-01-01T00:10:00.000Z')
-      push('1970-01-01T00:20:00.000Z')
-      push('1970-01-01T00:30:00.000Z')
-      push('1970-01-01T00:40:00.000Z')
-      push('1970-01-01T00:50:00.000Z')
+      await push('1970-01-01T00:00:00.000Z')
+      await push('1970-01-01T00:10:00.000Z')
+      await push('1970-01-01T00:20:00.000Z')
+      await push('1970-01-01T00:30:00.000Z')
+      await push('1970-01-01T00:40:00.000Z')
+      await push('1970-01-01T00:50:00.000Z')
 
       const server = new HyperSwarmDHTLogger(filename, 1, true)
 
@@ -152,7 +152,7 @@ module.exports = () => {
 
       await sleep(1000)
       await client.start()
-      await sleep(5000)
+      await sleep(2000)
 
       await Promise.all([
         server.stop(),
@@ -172,12 +172,12 @@ module.exports = () => {
       const push = (date) => fs.writeFile(
         filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
       )
-      push('1970-01-01T00:00:00.000Z')
-      push('1970-01-01T00:10:00.000Z')
-      push('1970-01-01T00:20:00.000Z')
-      push('1970-01-01T00:30:00.000Z')
-      push('1970-01-01T00:40:00.000Z')
-      push('1970-01-01T00:50:00.000Z')
+      await push('1970-01-01T00:00:00.000Z')
+      await push('1970-01-01T00:10:00.000Z')
+      await push('1970-01-01T00:20:00.000Z')
+      await push('1970-01-01T00:30:00.000Z')
+      await push('1970-01-01T00:40:00.000Z')
+      await push('1970-01-01T00:50:00.000Z')
 
       const server = new HyperSwarmDHTLogger(filename, 1, true)
 
@@ -191,7 +191,7 @@ module.exports = () => {
 
       await sleep(1000)
       await client.start()
-      await sleep(5000)
+      await sleep(2000)
 
       await Promise.all([
         server.stop(),
@@ -207,12 +207,12 @@ module.exports = () => {
       const push = (date) => fs.writeFile(
         filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
       )
-      push('1970-01-01T00:00:00.000Z')
-      push('1970-01-01T00:10:00.000Z')
-      push('1970-01-01T00:20:00.000Z')
-      push('1970-01-01T00:30:00.000Z')
-      push('1970-01-01T00:40:00.000Z')
-      push('1970-01-01T00:50:00.000Z')
+      await push('1970-01-01T00:00:00.000Z')
+      await push('1970-01-01T00:10:00.000Z')
+      await push('1970-01-01T00:20:00.000Z')
+      await push('1970-01-01T00:30:00.000Z')
+      await push('1970-01-01T00:40:00.000Z')
+      await push('1970-01-01T00:50:00.000Z')
 
       const server = new HyperSwarmDHTLogger(filename, 1, true)
 
@@ -223,7 +223,7 @@ module.exports = () => {
 
       await sleep(1000)
       await client.start()
-      await sleep(5000)
+      await sleep(2000)
 
       await Promise.all([
         server.stop(),
@@ -244,12 +244,12 @@ module.exports = () => {
       const push = (date) => fs.writeFile(
         filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
       )
-      push('1970-01-01T00:00:00.000Z')
-      push('1970-01-01T00:10:00.000Z')
-      push('1970-01-01T00:20:00.000Z')
-      push('1970-01-01T00:30:00.000Z')
-      push('1970-01-01T00:40:00.000Z')
-      push('1970-01-01T00:50:00.000Z')
+      await push('1970-01-01T00:00:00.000Z')
+      await push('1970-01-01T00:10:00.000Z')
+      await push('1970-01-01T00:20:00.000Z')
+      await push('1970-01-01T00:30:00.000Z')
+      await push('1970-01-01T00:40:00.000Z')
+      await push('1970-01-01T00:50:00.000Z')
 
       const server = new HyperSwarmDHTLogger(filename, 1, true)
 
@@ -260,7 +260,7 @@ module.exports = () => {
 
       await sleep(1000)
       await client.start()
-      await sleep(5000)
+      await sleep(2000)
 
       await Promise.all([
         server.stop(),
@@ -281,21 +281,21 @@ module.exports = () => {
       const push = (date) => fs.writeFile(
         filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
       )
-      push('1970-01-01T00:00:00.000Z')
-      push('\t')
-      push('\t')
-      push('\t')
-      push('1970-01-01T00:10:00.000Z')
-      push('\t')
-      push('\t')
-      push('1970-01-01T00:20:00.000Z')
-      push('\t')
-      push('\t')
-      push('\t')
-      push('1970-01-01T00:40:00.000Z')
-      push('\t')
-      push('\t')
-      push('\t')
+      await push('1970-01-01T00:00:00.000Z')
+      await push('\t')
+      await push('\t')
+      await push('\t')
+      await push('1970-01-01T00:10:00.000Z')
+      await push('\t')
+      await push('\t')
+      await push('1970-01-01T00:20:00.000Z')
+      await push('\t')
+      await push('\t')
+      await push('\t')
+      await push('1970-01-01T00:40:00.000Z')
+      await push('\t')
+      await push('\t')
+      await push('\t')
 
       const server = new HyperSwarmDHTLogger(filename, 1, true)
 
@@ -309,7 +309,7 @@ module.exports = () => {
 
       await sleep(1000)
       await client.start()
-      await sleep(5000)
+      await sleep(2000)
 
       await Promise.all([
         server.stop(),

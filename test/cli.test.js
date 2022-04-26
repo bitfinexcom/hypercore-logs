@@ -19,7 +19,7 @@ module.exports = () => {
     })
 
     afterEach(async function () {
-      this.timeout(20000)
+      this.timeout(30000)
       decache('../bin/hyperlog.js')
       console.log.restore()
 
