@@ -160,6 +160,21 @@ const hasValidDate = (line) => {
   return !Number.isNaN(logDate)
 }
 
+const sequenceSplit = (handler) => {
+  let reached = false
+
+  return data => {
+    if (reached) {
+      return true
+    }
+    if (handler(data)) {
+      reached = true
+      return true
+    }
+    return false
+  }
+}
+
 module.exports = {
   fullPath,
   isDir,
@@ -175,5 +190,6 @@ module.exports = {
   isDirPath,
   escapeRegex,
   parseLogDate,
-  hasValidDate
+  hasValidDate,
+  sequenceSplit
 }
