@@ -82,6 +82,14 @@ yargs.command(
       demandOption: true,
       description: 'feed public key, use either hex string or path to file'
     })
+      .option('start-date', {
+        type: 'string',
+        desc: 'feed read start by date'
+      })
+      .option('end-date', {
+        type: 'string',
+        desc: 'feed read end by date'
+      })
   )
   .command(
     'write',
@@ -137,6 +145,11 @@ yargs.command(
         alias: 's',
         default: null,
         desc: 'Key pair\'s seed'
+      })
+      .option('republish', {
+        type: 'boolean',
+        default: false,
+        desc: 'republish entire file to the stream'
       })
   )
   .demandCommand()
@@ -209,7 +222,13 @@ const main = async () => {
   if (cmd === 'dht-read') {
     if (!key) throw new Error('ERR_KEY_REQUIRED')
 
-    const client = new HyperSwarmDHTLogReader(key)
+    const streamOpts = {}
+    if (argv['start-date']) streamOpts.startDate = new Date(argv['start-date'])
+    if (argv['end-date']) streamOpts.endDate = new Date(argv['end-date'])
+    if (argv.include) streamOpts.include = argv.include
+    if (argv.exclude) streamOpts.exclude = argv.exclude
+
+    const client = new HyperSwarmDHTLogReader(key, streamOpts)
     const printer = new LogsPrinter()
 
     client.on('data', data => printer.print(data))
@@ -247,7 +266,7 @@ const main = async () => {
 
   if (cmd === 'dht-write') {
     if (!argv.file) throw new Error('ERR_FILE_MISSING')
-    const feed = new HyperSwarmDHTLogger(argv.file, argv.seed)
+    const feed = new HyperSwarmDHTLogger(argv.file, argv.seed, argv.republish)
 
     await feed.start()
     return { feed }

@@ -68,10 +68,10 @@ module.exports = () => {
       await watcher.stop()
 
       expect(databuff).to.eql([
-        `${path.join(tmpDir, 'temp1.log')} >>> test\n`,
-        `${path.join(tmpDir, 'temp2.log')} >>> test\n`
+        `${path.join(tmpDir, 'temp1.log')} >>> test`,
+        `${path.join(tmpDir, 'temp2.log')} >>> test`
       ])
-    }).timeout(12000)
+    }).timeout(120000)
 
     it('watches new files', async () => {
       const databuff = []
@@ -80,7 +80,7 @@ module.exports = () => {
       )
       await push('temp1.log') // create file
 
-      const watcher = new FilesWatcher(path.join(tmpDir, '*.log'), false)
+      const watcher = new FilesWatcher(path.join(tmpDir, '*.log'))
 
       watcher.on('data', data => databuff.push(data))
 
@@ -94,6 +94,40 @@ module.exports = () => {
       await watcher.stop()
 
       expect(databuff.length).to.be.equal(2)
-    }).timeout(12000)
+    }).timeout(120000)
+
+    it('fetch', async () => {
+      const databuff = []
+      const filename = path.join(tmpDir, 'temp.log')
+      const push = (date) => fs.writeFile(
+        filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
+      )
+      await push('1970-01-01T00:00:00.000Z')
+      await push('1970-01-01T00:10:00.000Z')
+      await push('1970-01-01T00:20:00.000Z')
+      await push('1970-01-01T00:30:00.000Z')
+      await push('1970-01-01T00:40:00.000Z')
+      await push('1970-01-01T00:50:00.000Z')
+
+      const watcher = new FilesWatcher(filename)
+
+      await sleep(1000)
+      await watcher.start()
+      await sleep(3000)
+
+      await watcher.fetch(data => databuff.push(data))
+
+      await sleep(1000)
+      await watcher.stop()
+
+      expect(databuff).to.eql([
+        '1970-01-01T00:00:00.000Z some data',
+        '1970-01-01T00:10:00.000Z some data',
+        '1970-01-01T00:20:00.000Z some data',
+        '1970-01-01T00:30:00.000Z some data',
+        '1970-01-01T00:40:00.000Z some data',
+        '1970-01-01T00:50:00.000Z some data'
+      ])
+    }).timeout(1200000)
   })
 }
