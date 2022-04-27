@@ -1,3 +1,7 @@
+# 2.0.0
+- feature: Add start/end date options to dht log reader
+- breaking change: added auto republishing to dht logger
+
 # 1.2.0
 - feature: add support for watching multiple files to hyperswarm dht logger
 - feature: add support for storing logs on file to hyperswarm dht log reader
