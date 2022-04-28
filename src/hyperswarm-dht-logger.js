@@ -85,10 +85,18 @@ class HyperSwarmDHTLogger {
       if (!hasValidDate(data)) return false
       return parseLogDate(data) > Date.parse(options.endDate)
     })
+    const checkStartPattern = sequenceSplit(data => {
+      return data.match(options.startPattern)
+    })
+    const checkEndPattern = sequenceSplit(data => {
+      return data.match(options.endPattern)
+    })
 
     return (data) => {
       if (options.startDate && !checkStartDate(data)) return false
       if (options.endDate && checkEndDate(data)) return false
+      if (options.startPattern && !checkStartPattern(data)) return false
+      if (options.endPattern && checkEndPattern(data)) return false
       if (options.include && !data.match(options.include)) return false
       if (options.exclude && data.match(options.exclude)) return false
 

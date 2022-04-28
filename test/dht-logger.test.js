@@ -329,7 +329,6 @@ module.exports = () => {
         await push('ccc')
         await push('abb')
 
-
         await sleep(1000)
         await stop()
 
@@ -363,6 +362,82 @@ module.exports = () => {
         expect(databuff).to.eql([
           'bbb',
           'abb'
+        ])
+      }).timeout(1200000)
+
+      it('start pattern', async () => {
+        const { push, databuff, start, stop } = await init({
+          startPattern: 'ef'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'def',
+          'efg',
+          'fgh'
+        ])
+      }).timeout(1200000)
+
+      it('end pattern', async () => {
+        const { push, databuff, start, stop } = await init({
+          endPattern: 'ef'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'abc',
+          'bcd',
+          'cde'
+        ])
+      }).timeout(1200000)
+
+      it('start pattern & end pattern', async () => {
+        const { push, databuff, start, stop } = await init({
+          startPattern: 'd',
+          endPattern: 'g'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'bcd',
+          'cde',
+          'def'
         ])
       }).timeout(1200000)
     })
