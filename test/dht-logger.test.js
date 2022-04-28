@@ -326,5 +326,104 @@ module.exports = () => {
         '\t some data'
       ])
     }).timeout(1200000)
+
+    describe('include/exclude', () => {
+      async function init (options) {
+        const databuff = []
+        const filename = path.join(tmpDir, 'temp.log')
+
+        const push = (data) => fs.writeFile(
+          filename, data + '\n', { encoding: 'utf-8', flag: 'a' }
+        )
+
+        const server = new HyperSwarmDHTLogger(filename)
+
+        await server.start()
+
+        const client = new HyperSwarmDHTLogReader(server.feedKey, options)
+
+        client.on('data', (data) => { databuff.push(data) })
+
+        return {
+          push,
+          databuff,
+          start: () => client.start(),
+          stop: () => Promise.all([
+            server.stop(),
+            client.stop()
+          ])
+        }
+      }
+
+      it('include', async () => {
+        const { push, databuff, start, stop } = await init({ include: 'b' })
+
+        await start()
+        await sleep(2000)
+
+        await push('aaa')
+        await push('abc')
+        await push('aaa')
+        await push('bbb')
+        await push('ccc')
+        await push('abb')
+
+        await sleep(2000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'abc',
+          'bbb',
+          'abb'
+        ])
+      }).timeout(1200000)
+
+      it('exclude', async () => {
+        const { push, databuff, start, stop } = await init({ exclude: 'c' })
+
+        await start()
+        await sleep(2000)
+
+        await push('aaa')
+        await push('abc')
+        await push('aaa')
+        await push('bbb')
+        await push('ccc')
+        await push('abb')
+
+
+        await sleep(2000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'aaa',
+          'aaa',
+          'bbb',
+          'abb'
+        ])
+      }).timeout(1200000)
+
+      it('include and exclude', async () => {
+        const { push, databuff, start, stop } = await init({ include: 'b', exclude: 'c' })
+
+        await start()
+        await sleep(2000)
+
+        await push('aaa')
+        await push('abc')
+        await push('aaa')
+        await push('bbb')
+        await push('ccc')
+        await push('abb')
+
+        await sleep(2000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'bbb',
+          'abb'
+        ])
+      }).timeout(1200000)
+    })
   })
 }
