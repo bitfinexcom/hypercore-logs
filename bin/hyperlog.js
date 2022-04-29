@@ -90,6 +90,14 @@ yargs.command(
         type: 'string',
         desc: 'feed read end by date'
       })
+      .option('start-pattern', {
+        type: 'string',
+        desc: 'start feed on pattern match'
+      })
+      .option('end-pattern', {
+        type: 'string',
+        desc: 'end feed on pattern match'
+      })
   )
   .command(
     'write',

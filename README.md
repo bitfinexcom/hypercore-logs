@@ -133,6 +133,8 @@ Options:
                                                                              [string] [required]
       --start-date           feed read start by date                         [string]
       --end-date             feed read end by date                           [string]
+      --start-pattern        start feed on pattern match                     [string]
+      --end-pattern          end feed on pattern match                       [string]
 ```
 
 ## Examples
