@@ -440,6 +440,31 @@ module.exports = () => {
           'def'
         ])
       }).timeout(1200000)
+
+      it('start pattern & end pattern by regexp', async () => {
+        const { push, databuff, start, stop } = await init({
+          startPattern: '^[a-z]c',
+          endPattern: '[fg]'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'bcd',
+          'cde'
+        ])
+      }).timeout(1200000)
     })
   })
 }
