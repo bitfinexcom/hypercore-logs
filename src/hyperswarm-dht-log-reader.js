@@ -7,7 +7,14 @@ const DHT = require('@hyperswarm/dht')
 class HyperSwarmDHTLogReader extends EventEmitter {
   /**
    * @param {string} feedKey
-   * @param {{ startDate?: Date, endDate?: Date, include?: string, exclude?: string }} streamOpts
+   * @param {{
+   * startDate?: Date
+   * endDate?: Date
+   * include?: string
+   * exclude?: string
+   * startPattern?: string
+   * endPattern?: string
+   * }} streamOpts
    */
   constructor (feedKey, streamOpts = {}) {
     super()

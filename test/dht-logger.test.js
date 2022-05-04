@@ -126,205 +126,345 @@ module.exports = () => {
       expect(databuff.length).to.be.eq(5)
     }).timeout(1200000)
 
-    it('filter logs by date', async () => {
-      const databuff = []
-      const filename = path.join(tmpDir, 'temp.log')
-      const push = (date) => fs.writeFile(
-        filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
-      )
-      await push('1970-01-01T00:00:00.000Z')
-      await push('1970-01-01T00:10:00.000Z')
-      await push('1970-01-01T00:20:00.000Z')
-      await push('1970-01-01T00:30:00.000Z')
-      await push('1970-01-01T00:40:00.000Z')
-      await push('1970-01-01T00:50:00.000Z')
+    describe('options', () => {
+      async function init (options) {
+        const databuff = []
+        const filename = path.join(tmpDir, 'temp.log')
+        const push = (data) => fs.writeFile(
+          filename, data + '\n', { encoding: 'utf-8', flag: 'a' }
+        )
+        const server = new HyperSwarmDHTLogger(filename)
+        await server.start()
 
-      const server = new HyperSwarmDHTLogger(filename, 1, true)
+        const client = new HyperSwarmDHTLogReader(server.feedKey, options)
+        client.on('data', (data) => { databuff.push(data) })
 
-      await server.start()
+        return {
+          push,
+          databuff,
+          start: () => client.start(),
+          stop: () => Promise.all([
+            server.stop(),
+            client.stop()
+          ])
+        }
+      }
 
-      const client = new HyperSwarmDHTLogReader(server.feedKey, {
-        startDate: new Date('1970-01-01T00:05:00.000Z'),
-        endDate: new Date('1970-01-01T00:35:00.000Z')
-      })
+      it('filter logs by date', async () => {
+        const { push, databuff, start, stop } = await init({
+          startDate: new Date('1970-01-01T00:05:00.000Z'),
+          endDate: new Date('1970-01-01T00:35:00.000Z')
+        })
 
-      client.on('data', (data) => { databuff.push(data.toString()) })
+        await start()
+        await sleep(1000)
 
-      await sleep(1000)
-      await client.start()
-      await sleep(2000)
+        await push('1970-01-01T00:00:00.000Z data')
+        await push('1970-01-01T00:10:00.000Z data')
+        await push('1970-01-01T00:20:00.000Z data')
+        await push('1970-01-01T00:30:00.000Z data')
+        await push('1970-01-01T00:40:00.000Z data')
+        await push('1970-01-01T00:50:00.000Z data')
 
-      await Promise.all([
-        server.stop(),
-        client.stop()
-      ])
+        await sleep(1000)
+        await stop()
 
-      expect(databuff).to.eql([
-        '1970-01-01T00:10:00.000Z some data',
-        '1970-01-01T00:20:00.000Z some data',
-        '1970-01-01T00:30:00.000Z some data'
-      ])
-    }).timeout(1200000)
+        expect(databuff).to.eql([
+          '1970-01-01T00:10:00.000Z data',
+          '1970-01-01T00:20:00.000Z data',
+          '1970-01-01T00:30:00.000Z data'
+        ])
+      }).timeout(1200000)
 
-    it('filter logs by date - out of bounds', async () => {
-      const databuff = []
-      const filename = path.join(tmpDir, 'temp.log')
-      const push = (date) => fs.writeFile(
-        filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
-      )
-      await push('1970-01-01T00:00:00.000Z')
-      await push('1970-01-01T00:10:00.000Z')
-      await push('1970-01-01T00:20:00.000Z')
-      await push('1970-01-01T00:30:00.000Z')
-      await push('1970-01-01T00:40:00.000Z')
-      await push('1970-01-01T00:50:00.000Z')
+      it('filter logs by date - out of bounds', async () => {
+        const { push, databuff, start, stop } = await init({
+          startDate: new Date('1970-01-01T00:55:00.000Z'),
+          endDate: new Date('1970-01-01T00:59:00.000Z')
+        })
 
-      const server = new HyperSwarmDHTLogger(filename, 1, true)
+        await start()
+        await sleep(1000)
 
-      await server.start()
+        await push('1970-01-01T00:00:00.000Z data')
+        await push('1970-01-01T00:10:00.000Z data')
+        await push('1970-01-01T00:20:00.000Z data')
+        await push('1970-01-01T00:30:00.000Z data')
+        await push('1970-01-01T00:40:00.000Z data')
+        await push('1970-01-01T00:50:00.000Z data')
 
-      const client = new HyperSwarmDHTLogReader(server.feedKey, {
-        startDate: new Date('1970-01-01T00:55:00.000Z'),
-        endDate: new Date('1970-01-01T00:59:00.000Z')
-      })
-      client.on('data', (data) => { databuff.push(data.toString()) })
+        await sleep(1000)
+        await stop()
 
-      await sleep(1000)
-      await client.start()
-      await sleep(2000)
+        expect(databuff).to.eql([])
+      }).timeout(1200000)
 
-      await Promise.all([
-        server.stop(),
-        client.stop()
-      ])
+      it('filter logs by date - startDate option', async () => {
+        const { push, databuff, start, stop } = await init({
+          startDate: new Date('1970-01-01T00:15:00.000Z')
+        })
 
-      expect(databuff).to.eql([])
-    }).timeout(1200000)
+        await start()
+        await sleep(1000)
 
-    it('filter logs by date - startDate option', async () => {
-      const databuff = []
-      const filename = path.join(tmpDir, 'temp.log')
-      const push = (date) => fs.writeFile(
-        filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
-      )
-      await push('1970-01-01T00:00:00.000Z')
-      await push('1970-01-01T00:10:00.000Z')
-      await push('1970-01-01T00:20:00.000Z')
-      await push('1970-01-01T00:30:00.000Z')
-      await push('1970-01-01T00:40:00.000Z')
-      await push('1970-01-01T00:50:00.000Z')
+        await push('1970-01-01T00:00:00.000Z data')
+        await push('1970-01-01T00:10:00.000Z data')
+        await push('1970-01-01T00:20:00.000Z data')
+        await push('1970-01-01T00:30:00.000Z data')
+        await push('1970-01-01T00:40:00.000Z data')
+        await push('1970-01-01T00:50:00.000Z data')
 
-      const server = new HyperSwarmDHTLogger(filename, 1, true)
+        await sleep(1000)
+        await stop()
 
-      await server.start()
+        expect(databuff).to.eql([
+          '1970-01-01T00:20:00.000Z data',
+          '1970-01-01T00:30:00.000Z data',
+          '1970-01-01T00:40:00.000Z data',
+          '1970-01-01T00:50:00.000Z data'
+        ])
+      }).timeout(1200000)
 
-      const client = new HyperSwarmDHTLogReader(server.feedKey, { startDate: new Date('1970-01-01T00:15:00.000Z') })
-      client.on('data', (data) => { databuff.push(data.toString()) })
+      it('filter logs by date - endDate option', async () => {
+        const { push, databuff, start, stop } = await init({
+          endDate: new Date('1970-01-01T00:35:00.000Z')
+        })
 
-      await sleep(1000)
-      await client.start()
-      await sleep(2000)
+        await start()
+        await sleep(1000)
 
-      await Promise.all([
-        server.stop(),
-        client.stop()
-      ])
+        await push('1970-01-01T00:00:00.000Z data')
+        await push('1970-01-01T00:10:00.000Z data')
+        await push('1970-01-01T00:20:00.000Z data')
+        await push('1970-01-01T00:30:00.000Z data')
+        await push('1970-01-01T00:40:00.000Z data')
+        await push('1970-01-01T00:50:00.000Z data')
 
-      expect(databuff).to.eql([
-        '1970-01-01T00:20:00.000Z some data',
-        '1970-01-01T00:30:00.000Z some data',
-        '1970-01-01T00:40:00.000Z some data',
-        '1970-01-01T00:50:00.000Z some data'
-      ])
-    }).timeout(1200000)
+        await sleep(1000)
+        await stop()
 
-    it('filter logs by date - endDate option', async () => {
-      const databuff = []
-      const filename = path.join(tmpDir, 'temp.log')
-      const push = (date) => fs.writeFile(
-        filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
-      )
-      await push('1970-01-01T00:00:00.000Z')
-      await push('1970-01-01T00:10:00.000Z')
-      await push('1970-01-01T00:20:00.000Z')
-      await push('1970-01-01T00:30:00.000Z')
-      await push('1970-01-01T00:40:00.000Z')
-      await push('1970-01-01T00:50:00.000Z')
+        expect(databuff).to.eql([
+          '1970-01-01T00:00:00.000Z data',
+          '1970-01-01T00:10:00.000Z data',
+          '1970-01-01T00:20:00.000Z data',
+          '1970-01-01T00:30:00.000Z data'
+        ])
+      }).timeout(1200000)
 
-      const server = new HyperSwarmDHTLogger(filename, 1, true)
+      it('filter multiline logs by date', async () => {
+        const { push, databuff, start, stop } = await init({
+          startDate: new Date('1970-01-01T00:05:00.000Z'),
+          endDate: new Date('1970-01-01T00:35:00.000Z')
+        })
 
-      await server.start()
+        await start()
+        await sleep(1000)
 
-      const client = new HyperSwarmDHTLogReader(server.feedKey, { endDate: new Date('1970-01-01T00:35:00.000Z') })
-      client.on('data', (data) => { databuff.push(data.toString()) })
+        await push('1970-01-01T00:00:00.000Z data')
+        await push('\t data')
+        await push('\t data')
+        await push('\t data')
+        await push('1970-01-01T00:10:00.000Z data')
+        await push('\t data')
+        await push('\t data')
+        await push('1970-01-01T00:20:00.000Z data')
+        await push('\t data')
+        await push('\t data')
+        await push('\t data')
+        await push('1970-01-01T00:40:00.000Z data')
+        await push('\t data')
+        await push('\t data')
+        await push('\t data')
 
-      await sleep(1000)
-      await client.start()
-      await sleep(2000)
+        await sleep(1000)
+        await stop()
 
-      await Promise.all([
-        server.stop(),
-        client.stop()
-      ])
+        expect(databuff).to.eql([
+          '1970-01-01T00:10:00.000Z data',
+          '\t data',
+          '\t data',
+          '1970-01-01T00:20:00.000Z data',
+          '\t data',
+          '\t data',
+          '\t data'
+        ])
+      }).timeout(1200000)
 
-      expect(databuff).to.eql([
-        '1970-01-01T00:00:00.000Z some data',
-        '1970-01-01T00:10:00.000Z some data',
-        '1970-01-01T00:20:00.000Z some data',
-        '1970-01-01T00:30:00.000Z some data'
-      ])
-    }).timeout(1200000)
+      it('include', async () => {
+        const { push, databuff, start, stop } = await init({
+          include: 'b'
+        })
 
-    it('filter multiline logs by date', async () => {
-      const databuff = []
-      const filename = path.join(tmpDir, 'temp.log')
-      const push = (date) => fs.writeFile(
-        filename, `${date} some data\n`, { encoding: 'utf-8', flag: 'a' }
-      )
-      await push('1970-01-01T00:00:00.000Z')
-      await push('\t')
-      await push('\t')
-      await push('\t')
-      await push('1970-01-01T00:10:00.000Z')
-      await push('\t')
-      await push('\t')
-      await push('1970-01-01T00:20:00.000Z')
-      await push('\t')
-      await push('\t')
-      await push('\t')
-      await push('1970-01-01T00:40:00.000Z')
-      await push('\t')
-      await push('\t')
-      await push('\t')
+        await start()
+        await sleep(1000)
 
-      const server = new HyperSwarmDHTLogger(filename, 1, true)
+        await push('aaa')
+        await push('abc')
+        await push('aaa')
+        await push('bbb')
+        await push('ccc')
+        await push('abb')
 
-      await server.start()
+        await sleep(1000)
+        await stop()
 
-      const client = new HyperSwarmDHTLogReader(server.feedKey, {
-        startDate: new Date('1970-01-01T00:05:00.000Z'),
-        endDate: new Date('1970-01-01T00:35:00.000Z')
-      })
-      client.on('data', (data) => { databuff.push(data.toString()) })
+        expect(databuff).to.eql([
+          'abc',
+          'bbb',
+          'abb'
+        ])
+      }).timeout(1200000)
 
-      await sleep(1000)
-      await client.start()
-      await sleep(2000)
+      it('exclude', async () => {
+        const { push, databuff, start, stop } = await init({
+          exclude: 'c'
+        })
 
-      await Promise.all([
-        server.stop(),
-        client.stop()
-      ])
+        await start()
+        await sleep(1000)
 
-      expect(databuff).to.eql([
-        '1970-01-01T00:10:00.000Z some data',
-        '\t some data',
-        '\t some data',
-        '1970-01-01T00:20:00.000Z some data',
-        '\t some data',
-        '\t some data',
-        '\t some data'
-      ])
-    }).timeout(1200000)
+        await push('aaa')
+        await push('abc')
+        await push('aaa')
+        await push('bbb')
+        await push('ccc')
+        await push('abb')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'aaa',
+          'aaa',
+          'bbb',
+          'abb'
+        ])
+      }).timeout(1200000)
+
+      it('include and exclude', async () => {
+        const { push, databuff, start, stop } = await init({
+          include: 'b',
+          exclude: 'c'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('aaa')
+        await push('abc')
+        await push('aaa')
+        await push('bbb')
+        await push('ccc')
+        await push('abb')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'bbb',
+          'abb'
+        ])
+      }).timeout(1200000)
+
+      it('start pattern', async () => {
+        const { push, databuff, start, stop } = await init({
+          startPattern: 'ef'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'def',
+          'efg',
+          'fgh'
+        ])
+      }).timeout(1200000)
+
+      it('end pattern', async () => {
+        const { push, databuff, start, stop } = await init({
+          endPattern: 'ef'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'abc',
+          'bcd',
+          'cde'
+        ])
+      }).timeout(1200000)
+
+      it('start pattern & end pattern', async () => {
+        const { push, databuff, start, stop } = await init({
+          startPattern: 'd',
+          endPattern: 'g'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'bcd',
+          'cde',
+          'def'
+        ])
+      }).timeout(1200000)
+
+      it('start pattern & end pattern by regexp', async () => {
+        const { push, databuff, start, stop } = await init({
+          startPattern: '^[a-z]c',
+          endPattern: '[fg]'
+        })
+
+        await start()
+        await sleep(1000)
+
+        await push('abc')
+        await push('bcd')
+        await push('cde')
+        await push('def')
+        await push('efg')
+        await push('fgh')
+
+        await sleep(1000)
+        await stop()
+
+        expect(databuff).to.eql([
+          'bcd',
+          'cde'
+        ])
+      }).timeout(1200000)
+    })
   })
 }

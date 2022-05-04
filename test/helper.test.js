@@ -9,7 +9,7 @@ const { expect } = chai
 const {
   fullPath, isDir, isGlob, isUsrDir, fExists, globPath,
   resolveUsrDir, resolvePaths, isHexStr, createDir, createFileDir,
-  escapeRegex, parseLogDate, hasValidDate
+  escapeRegex, parseLogDate, hasValidDate, sequenceSplit
 } = require('../src/helper')
 
 module.exports = () => {
@@ -242,6 +242,42 @@ module.exports = () => {
 
     it('hasValidDate - invalid date', () => {
       expect(hasValidDate(null + ' some data')).to.be.false()
+    })
+
+    it('sequenceSplit', () => {
+      const split = sequenceSplit(item => item >= 3)
+
+      const result = [
+        split(0),
+        split(1),
+        split(2),
+        split(3),
+        split(4),
+        split(0),
+        split(1),
+        split(2),
+        split(3),
+        split(4)
+      ]
+      expect(result).to.eql([
+        false, false, false, true, true, true, true, true, true, true
+      ])
+    })
+
+    it('sequenceSplit - out of bounds', () => {
+      const split = sequenceSplit(item => item < 0)
+
+      const result = [
+        split(0),
+        split(1),
+        split(2),
+        split(3),
+        split(4),
+        split(0)
+      ]
+      expect(result).to.eql([
+        false, false, false, false, false, false
+      ])
     })
   })
 }

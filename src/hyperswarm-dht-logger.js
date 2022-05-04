@@ -4,7 +4,7 @@ const debug = require('debug')('hcore-logger')
 const DHT = require('@hyperswarm/dht')
 const uuid = require('uuid')
 const FilesWatcher = require('./files-watcher')
-const { parseLogDate, hasValidDate } = require('./helper')
+const { parseLogDate, hasValidDate, sequenceSplit } = require('./helper')
 
 const CRYPTO_SIGN_SEEDBYTES = 32
 
@@ -77,40 +77,26 @@ class HyperSwarmDHTLogger {
   }
 
   createFilter (options) {
-    let reachedStart = false
-    let reachedEnd = false
+    const checkStartDate = sequenceSplit(data => {
+      if (!hasValidDate(data)) return false
+      return parseLogDate(data) >= Date.parse(options.startDate)
+    })
+    const checkEndDate = sequenceSplit(data => {
+      if (!hasValidDate(data)) return false
+      return parseLogDate(data) > Date.parse(options.endDate)
+    })
+    const checkStartPattern = sequenceSplit(data => {
+      return data.match(options.startPattern)
+    })
+    const checkEndPattern = sequenceSplit(data => {
+      return data.match(options.endPattern)
+    })
 
     return (data) => {
-      if (options.startDate) {
-        const date = hasValidDate(data) ? parseLogDate(data) : null
-        const startDate = new Date(options.startDate)
-
-        if (!reachedStart) {
-          if (date === null) {
-            return false
-          } else if (date >= startDate.getTime()) {
-            reachedStart = true
-          } else {
-            return false
-          }
-        }
-      }
-      if (options.endDate) {
-        const date = hasValidDate(data) ? parseLogDate(data) : null
-        const startDate = new Date(options.endDate)
-
-        if (reachedEnd) {
-          return false
-        } else if (date !== null) {
-          if (reachedEnd) {
-            reachedEnd = true
-            return false
-          } else if (date > startDate.getTime()) {
-            reachedEnd = true
-            return false
-          }
-        }
-      }
+      if (options.startDate && !checkStartDate(data)) return false
+      if (options.endDate && checkEndDate(data)) return false
+      if (options.startPattern && !checkStartPattern(data)) return false
+      if (options.endPattern && checkEndPattern(data)) return false
       if (options.include && !data.match(options.include)) return false
       if (options.exclude && data.match(options.exclude)) return false
 

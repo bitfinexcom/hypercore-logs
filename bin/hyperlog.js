@@ -90,6 +90,14 @@ yargs.command(
         type: 'string',
         desc: 'feed read end by date'
       })
+      .option('start-pattern', {
+        type: 'string',
+        desc: 'start feed on pattern match'
+      })
+      .option('end-pattern', {
+        type: 'string',
+        desc: 'end feed on pattern match'
+      })
   )
   .command(
     'write',
@@ -225,6 +233,8 @@ const main = async () => {
     const streamOpts = {}
     if (argv['start-date']) streamOpts.startDate = new Date(argv['start-date'])
     if (argv['end-date']) streamOpts.endDate = new Date(argv['end-date'])
+    if (argv['start-pattern']) streamOpts.startPattern = argv['start-pattern']
+    if (argv['end-pattern']) streamOpts.endPattern = argv['end-pattern']
     if (argv.include) streamOpts.include = argv.include
     if (argv.exclude) streamOpts.exclude = argv.exclude
 
