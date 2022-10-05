@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/bitfinexcom/hypercore-logs#readme",
   "dependencies": {
-    "@hyperswarm/dht": "^6.0.1",
+    "@hyperswarm/dht": "^6.2.0",
     "@hyperswarm/replicator": "2.0.2",
     "chokidar": "3.5.1",
     "debug": "4.3.2",
